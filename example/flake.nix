@@ -1,14 +1,14 @@
 {
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
-    xnode-nextjs-template.url = "github:Openmesh-Network/xnode-nextjs-template";
+    xnode-manager-frontend.url = "github:Openmesh-Network/xnode-manager-frontend";
   };
 
   outputs =
     {
       self,
       nixpkgs,
-      xnode-nextjs-template,
+      xnode-manager-frontend,
       ...
     }:
     let
@@ -18,19 +18,19 @@
       nixosConfigurations.container = nixpkgs.lib.nixosSystem {
         inherit system;
         specialArgs = {
-          inherit xnode-nextjs-template;
+          inherit xnode-manager-frontend;
         };
         modules = [
           (
-            { xnode-nextjs-template, ... }:
+            { xnode-manager-frontend, ... }:
             {
               imports = [
-                xnode-nextjs-template.nixosModules.default
+                xnode-manager-frontend.nixosModules.default
               ];
 
               boot.isContainer = true;
 
-              services.xnode-nextjs-template = {
+              services.xnode-manager-frontend = {
                 enable = true;
               };
 

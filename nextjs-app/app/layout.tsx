@@ -1,6 +1,18 @@
+import "@/app/globals.css";
+
 import { Metadata, Viewport } from "next";
+import localFont from "next/font/local";
 
 import { siteConfig } from "@/config/site";
+import { cn } from "@/lib/utils";
+import { Header } from "@/components/header";
+import { headers } from "next/headers";
+import { ContextProvider } from "@/components/context-provider";
+import { LoginXnode } from "@/components/xnode/login";
+
+const inter = localFont({
+  src: "./InterVariable.ttf",
+});
 
 export const metadata: Metadata = {
   title: {
@@ -26,12 +38,20 @@ interface RootLayoutProps {
   children: React.ReactNode;
 }
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  const cookies = (await headers()).get("cookie");
+
   return (
     <>
       <html>
         <head />
-        <body>{children}</body>
+        <body className={cn("min-h-screen antialiased", inter.className)}>
+          <Header />
+          <ContextProvider cookies={cookies}>
+            <div className="m-2">{children}</div>
+            <LoginXnode />
+          </ContextProvider>
+        </body>
       </html>
     </>
   );

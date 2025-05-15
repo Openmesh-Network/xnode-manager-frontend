@@ -1,6 +1,7 @@
-export type SiteConfig = typeof siteConfig
+export type SiteConfig = typeof siteConfig;
 
 export const siteConfig = {
-  name: "Xnode Nextjs Template",
-  description: "Template to make your Nextjs app Xnode/Nix compatible.",
-} as const
+  name: "Xnode Manager Frontend",
+  description: "Manage your Xnodes through a web interface.",
+  url: "https://xnode.openmesh.network",
+} as const;

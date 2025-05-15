@@ -5,12 +5,12 @@
   ...
 }:
 let
-  cfg = config.services.xnode-nextjs-template;
-  xnode-nextjs-template = pkgs.callPackage ./package.nix { };
+  cfg = config.services.xnode-manager-frontend;
+  xnode-manager-frontend = pkgs.callPackage ./package.nix { };
 in
 {
   options = {
-    services.xnode-nextjs-template = {
+    services.xnode-manager-frontend = {
       enable = lib.mkEnableOption "Enable the nextjs app";
 
       hostname = lib.mkOption {
@@ -42,13 +42,13 @@ in
   };
 
   config = lib.mkIf cfg.enable {
-    users.groups.xnode-nextjs-template = { };
-    users.users.xnode-nextjs-template = {
+    users.groups.xnode-manager-frontend = { };
+    users.users.xnode-manager-frontend = {
       isSystemUser = true;
-      group = "xnode-nextjs-template";
+      group = "xnode-manager-frontend";
     };
 
-    systemd.services.xnode-nextjs-template = {
+    systemd.services.xnode-manager-frontend = {
       wantedBy = [ "multi-user.target" ];
       description = "Nextjs App.";
       after = [ "network.target" ];
@@ -57,9 +57,9 @@ in
         PORT = toString cfg.port;
       };
       serviceConfig = {
-        ExecStart = "${lib.getExe xnode-nextjs-template}";
-        User = "xnode-nextjs-template";
-        Group = "xnode-nextjs-template";
+        ExecStart = "${lib.getExe xnode-manager-frontend}";
+        User = "xnode-manager-frontend";
+        Group = "xnode-manager-frontend";
         CacheDirectory = "nextjs-app";
       };
     };
