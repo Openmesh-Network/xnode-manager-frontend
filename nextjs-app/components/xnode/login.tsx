@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useSetSettings, useSettings } from "../context/settings";
 import { toXnodeAddress, useAddress } from "@/hooks/useAddress";
 import {
@@ -12,8 +12,8 @@ import {
   DialogTitle,
 } from "../ui/dialog";
 import { Button } from "../ui/button";
-import { useDisconnect, useSignMessage } from "wagmi";
-import { recoverMessageAddress } from "viem";
+import { useAccount, useDisconnect, useSignMessage } from "wagmi";
+import { Address, recoverMessageAddress } from "viem";
 
 export function LoginXnode() {
   const address = useAddress();
@@ -29,8 +29,11 @@ export function LoginXnode() {
   const { disconnectAsync } = useDisconnect();
   const { signMessageAsync } = useSignMessage();
 
+  const { connector } = useAccount();
+  const [signing, setSigning] = useState<boolean>(false); // disable pop up during social login signing to prevent focus steal
+
   return (
-    <Dialog open={!hasSignature}>
+    <Dialog open={!hasSignature && (!signing || connector?.type !== "AUTH")}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Wallet Signature Required</DialogTitle>
@@ -48,7 +51,10 @@ export function LoginXnode() {
           <Button
             onClick={() => {
               const message = "Create Xnode Manager session";
-              signMessageAsync({ message })
+              setSigning(true);
+              signMessageAsync({
+                message,
+              })
                 .then(async (sig) => {
                   const signer = await recoverMessageAddress({
                     message,
@@ -62,7 +68,8 @@ export function LoginXnode() {
                     },
                   });
                 })
-                .catch(console.error);
+                .catch(console.error)
+                .finally(() => setSigning(false));
             }}
           >
             Sign

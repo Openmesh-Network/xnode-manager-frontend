@@ -25,6 +25,9 @@ createAppKit({
   networks: [...networks],
   defaultNetwork: networks[0],
   metadata: metadata,
+  defaultAccountTypes: {
+    eip155: "eoa",
+  },
 });
 
 function Web3Provider({
