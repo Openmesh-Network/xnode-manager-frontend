@@ -1,5 +1,6 @@
 import { useSettings, Xnode } from "@/components/context/settings";
 import {
+  commandInfo,
   cpuUsage,
   diskUsage,
   getContainerConfig,
@@ -10,6 +11,7 @@ import {
   getProcesses,
   login,
   memoryUsage,
+  requestInfo,
   Session,
 } from "@/lib/xnode";
 import { useQuery } from "@tanstack/react-query";
@@ -19,6 +21,7 @@ const containersRefetchInterval = 20_000; // 20 sec
 const processesRefetchInterval = 20_000; // 20 sec
 const fileRefetchInterval = 20_000; // 20 sec
 const logsRefetchInterval = 1000; // 1 sec
+const requestInterval = 1000; // 1 sec
 
 export function useSession({ xnode }: { xnode?: Xnode }) {
   const { wallets } = useSettings();
@@ -108,7 +111,7 @@ export function useContainerConfig({
   containerId?: string;
 }) {
   return useQuery({
-    queryKey: ["containers", containerId, session?.baseUrl ?? ""],
+    queryKey: ["container", containerId, session?.baseUrl ?? ""],
     enabled: !!session && !!containerId,
     queryFn: async () => {
       if (!session || !containerId) {
@@ -208,5 +211,54 @@ export function useFile({
       return await getFile({ session, location: { containerId, path } });
     },
     refetchInterval: fileRefetchInterval,
+  });
+}
+
+export function useRequestInfo({
+  session,
+  request_id,
+}: {
+  session?: Session;
+  request_id?: number;
+}) {
+  return useQuery({
+    queryKey: ["requestInfo", request_id ?? "", session?.baseUrl ?? ""],
+    enabled: !!session && !!request_id,
+    queryFn: async () => {
+      if (!session || !request_id) {
+        return undefined;
+      }
+
+      return await requestInfo({ session, request_id: request_id });
+    },
+    refetchInterval: requestInterval,
+  });
+}
+
+export function useCommandInfo({
+  session,
+  request_id,
+  command,
+}: {
+  session?: Session;
+  request_id?: number;
+  command?: string;
+}) {
+  return useQuery({
+    queryKey: [
+      "requestInfo",
+      request_id ?? "",
+      command ?? "",
+      session?.baseUrl ?? "",
+    ],
+    enabled: !!session && !!request_id && !!command,
+    queryFn: async () => {
+      if (!session || !request_id || !command) {
+        return undefined;
+      }
+
+      return await commandInfo({ session, request_id: request_id, command });
+    },
+    refetchInterval: requestInterval,
   });
 }

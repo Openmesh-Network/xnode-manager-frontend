@@ -28,6 +28,8 @@ import {
 } from "../ui/alert-dialog";
 import { setOS } from "@/lib/xnode";
 import { App } from "./app";
+import { AppStore } from "./app/store";
+import { RequestPopupProvider } from "./request-popup";
 
 export function XnodeDetailed({ domain }: { domain?: string }) {
   const settings = useSettings();
@@ -36,12 +38,6 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
     () => settings.xnodes.find((x) => x.domain === domain),
     [settings.xnodes]
   );
-
-  const [busy, setBusy] = useState<boolean>(false);
-
-  const [xnodeDomain, setXnodeDomain] = useState<string>("");
-  const [acmeEmail, setAcmeEmail] = useState<string>("");
-  const { push } = useRouter();
 
   const { data: session } = useSession({ xnode });
   const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useCpu({ session });
@@ -81,83 +77,8 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
   });
 
   return (
-    <>
+    <RequestPopupProvider session={session}>
       <div className="flex flex-col gap-5">
-        {xnode?.insecure && (
-          <Alert>
-            <AlertTriangle />
-            <AlertTitle>WARNING: Using unencrypted communication!</AlertTitle>
-            <AlertDescription>
-              <span>
-                You should enable HTTPS before accessing any confidential
-                information on your Xnode (such as validator private keys).
-                Setup an A record pointing to this Xnode IP address ({domain}),
-                it can be under any (sub)domain. Only press the update button
-                once the record has been set and has propagated, otherwise you
-                might become locked out of your Xnode. Email is required and
-                cannot be from a blacklisted domain (e.g. @example.com).
-              </span>
-              <div className="pt-1 flex gap-2 flex-wrap">
-                <div className="flex gap-2">
-                  <Label htmlFor="xnode-domain">Domain</Label>
-                  <Input
-                    id="xnode-domain"
-                    className="min-w-40"
-                    value={xnodeDomain}
-                    onChange={(e) => setXnodeDomain(e.target.value)}
-                  />
-                </div>
-                <div className="flex gap-2">
-                  <Label htmlFor="xnode-domain">ACME Email</Label>
-                  <Input
-                    id="acme-email"
-                    className="min-w-40"
-                    value={acmeEmail}
-                    onChange={(e) => setAcmeEmail(e.target.value)}
-                  />
-                </div>
-                <Button
-                  onClick={() => {
-                    if (!session) {
-                      return;
-                    }
-
-                    setBusy(true);
-                    setOS({
-                      session,
-                      os: {
-                        domain: xnodeDomain,
-                        acme_email: acmeEmail,
-                        as_child: false,
-                      },
-                    })
-                      .then(() => {
-                        setSettings({
-                          ...settings,
-                          xnodes: settings.xnodes.map((x) => {
-                            if (x === xnode) {
-                              return {
-                                ...xnode,
-                                domain: xnodeDomain,
-                                insecure: false,
-                              };
-                            }
-
-                            return x;
-                          }),
-                        });
-                        push(`/xnode/${xnodeDomain}`);
-                      })
-                      .finally(() => setBusy(false));
-                  }}
-                  disabled={busy}
-                >
-                  Update
-                </Button>
-              </div>
-            </AlertDescription>
-          </Alert>
-        )}
         <Section title="Monitor Xnode">
           <div className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-md:grid-cols-1">
             {cpuHistory.length > 0 && (
@@ -176,8 +97,8 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
                   <CardTitle>Disk Usage</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  {disk.map((d, i) => (
-                    <div key={i} className="flex flex-col">
+                  {disk.map((d) => (
+                    <div key={d.mount_point} className="flex flex-col">
                       <span className="text-sm">
                         Disk {d.mount_point.replace("/mnt/disk", "")}
                       </span>
@@ -196,24 +117,16 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
         </Section>
         {apps && (
           <SectionCard title="Apps">
-            {apps.map((app, i) => (
-              <App key={i} session={session} containerId={app} />
-            ))}
+            <AppStore session={session} exclude={apps} />
+            <div className="flex gap-3 flex-wrap">
+              {apps.map((app) => (
+                <App key={app} session={session} containerId={app} />
+              ))}
+            </div>
           </SectionCard>
         )}
       </div>
-      <AlertDialog open={busy}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Performing action...</AlertDialogTitle>
-            <AlertDialogDescription className="flex gap-1 place-items-center">
-              <Hourglass />
-              <span>Please wait. Do not refresh the page.</span>
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+    </RequestPopupProvider>
   );
 }
 

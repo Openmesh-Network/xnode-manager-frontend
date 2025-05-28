@@ -78,8 +78,8 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
             <div className="flex flex-col gap-1">
               <span>CPU Usage</span>
               <div className="flex flex-wrap gap-1">
-                {cpu.map((c, i) => (
-                  <TooltipProvider key={i}>
+                {cpu.map((c) => (
+                  <TooltipProvider key={c.name}>
                     <Tooltip>
                       <TooltipTrigger>
                         <div
@@ -119,8 +119,8 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
           {disk && (
             <div className="flex flex-col gap-1">
               <span>Disk Usage</span>
-              {disk.map((d, i) => (
-                <div key={i} className="flex flex-col">
+              {disk.map((d) => (
+                <div key={d.mount_point} className="flex flex-col">
                   <span className="text-sm">
                     Disk {d.mount_point.replace("/mnt/disk", "")}
                   </span>

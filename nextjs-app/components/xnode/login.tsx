@@ -13,7 +13,7 @@ import {
 } from "../ui/dialog";
 import { Button } from "../ui/button";
 import { useAccount, useDisconnect, useSignMessage } from "wagmi";
-import { Address, recoverMessageAddress } from "viem";
+import { recoverMessageAddress } from "viem";
 
 export function LoginXnode() {
   const address = useAddress();

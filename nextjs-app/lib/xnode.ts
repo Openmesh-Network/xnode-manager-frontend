@@ -70,7 +70,7 @@ export type ConfigurationAction =
   | {
       Set: {
         container: string;
-        settings?: ContainerSettings;
+        settings: ContainerSettings;
         update_inputs?: string[];
       };
     }
@@ -100,6 +100,8 @@ export interface Log {
       };
 }
 
+export type ProcessCommand = "Start" | "Stop" | "Restart";
+
 export interface File {
   content: string;
 }
@@ -109,6 +111,23 @@ export interface Directory {
   files: string[];
   symlinks: string[];
   unknown: string[];
+}
+
+export interface RequestInfo {
+  commands: string[];
+  // result: { Success: { body?: string } } | { Error: { error: string } } | null;
+  result: { Success?: { body?: string }; Error?: { error: string } } | null;
+}
+
+export interface CommandInfo {
+  command: string;
+  stdout: string;
+  stderr: string;
+  result?: string;
+}
+
+export interface RequestIdResponse {
+  request_id: number;
 }
 
 export async function login({
@@ -194,8 +213,10 @@ export async function setOS({
 }: {
   session: Session;
   os: OSChange;
-}): Promise<void> {
-  return session.axiosInstance.post(`${session.baseUrl}/os/set`, os);
+}): Promise<RequestIdResponse> {
+  return session.axiosInstance
+    .post(`${session.baseUrl}/os/set`, os)
+    .then((res) => res.data);
 }
 
 export async function getContainers({
@@ -226,11 +247,10 @@ export async function changeConfig({
 }: {
   session: Session;
   changes: ConfigurationAction[];
-}): Promise<void> {
-  return session.axiosInstance.post(
-    `${session.baseUrl}/config/change`,
-    changes
-  );
+}): Promise<RequestIdResponse> {
+  return session.axiosInstance
+    .post(`${session.baseUrl}/config/change`, changes)
+    .then((res) => res.data);
 }
 
 export async function getProcesses({
@@ -279,6 +299,30 @@ export async function getLogs({
         };
       })
     );
+}
+
+export async function executeProcess({
+  session,
+  containerId,
+  process,
+  command,
+}: {
+  session: Session;
+  containerId: string;
+  process: string;
+  command: ProcessCommand;
+}): Promise<RequestIdResponse> {
+  return session.axiosInstance
+    .post(
+      `${session.baseUrl}/process/execute/${containerId}/${process}`,
+      command,
+      {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      }
+    )
+    .then((res) => res.data);
 }
 
 export async function getFile({
@@ -385,4 +429,33 @@ export async function removeDirectory({
       make_empty,
     }
   );
+}
+
+export async function requestInfo({
+  session,
+  request_id,
+}: {
+  session: Session;
+  request_id: number;
+}): Promise<RequestInfo> {
+  return session.axiosInstance
+    .get(`${session.baseUrl}/request/info/${request_id}`)
+    .then((res) => res.data as RequestInfo)
+    .then((info) => {
+      return { ...info, commands: info.commands.sort() };
+    });
+}
+
+export async function commandInfo({
+  session,
+  request_id,
+  command,
+}: {
+  session: Session;
+  request_id: number;
+  command: string;
+}): Promise<CommandInfo> {
+  return session.axiosInstance
+    .get(`${session.baseUrl}/request/info/${request_id}/${command}`)
+    .then((res) => res.data);
 }
