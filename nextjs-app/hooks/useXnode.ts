@@ -8,6 +8,7 @@ import {
   getDirectory,
   getFile,
   getLogs,
+  getOS,
   getProcesses,
   login,
   memoryUsage,
@@ -17,17 +18,28 @@ import {
 import { useQuery } from "@tanstack/react-query";
 
 const usageRefetchInterval = 1000; // 1 sec
+const OSRefetchInterval = 20_000; // 20 sec
 const containersRefetchInterval = 20_000; // 20 sec
 const processesRefetchInterval = 20_000; // 20 sec
 const fileRefetchInterval = 20_000; // 20 sec
 const logsRefetchInterval = 1000; // 1 sec
 const requestInterval = 1000; // 1 sec
 
-export function useSession({ xnode }: { xnode?: Xnode }) {
+export interface QueryArgs {
+  enable?: boolean;
+}
+
+export function useSession({
+  xnode,
+  queryArgs,
+}: {
+  xnode?: Xnode;
+  queryArgs?: QueryArgs;
+}) {
   const { wallets } = useSettings();
   return useQuery({
     queryKey: ["session", xnode?.domain ?? "", xnode?.insecure ?? false],
-    enabled: !!xnode,
+    enabled: !!xnode && queryArgs?.enable !== false,
     queryFn: async () => {
       if (!xnode) {
         return undefined;
@@ -85,6 +97,21 @@ export function useDisk({ session }: { session?: Session }) {
       return await diskUsage({ session });
     },
     refetchInterval: usageRefetchInterval,
+  });
+}
+
+export function useOS({ session }: { session?: Session }) {
+  return useQuery({
+    queryKey: ["OS", session?.baseUrl ?? ""],
+    enabled: !!session,
+    queryFn: async () => {
+      if (!session) {
+        return undefined;
+      }
+
+      return await getOS({ session });
+    },
+    refetchInterval: OSRefetchInterval,
   });
 }
 
@@ -239,10 +266,12 @@ export function useCommandInfo({
   session,
   request_id,
   command,
+  queryArgs,
 }: {
   session?: Session;
   request_id?: number;
   command?: string;
+  queryArgs?: QueryArgs;
 }) {
   return useQuery({
     queryKey: [
@@ -251,7 +280,8 @@ export function useCommandInfo({
       command ?? "",
       session?.baseUrl ?? "",
     ],
-    enabled: !!session && !!request_id && !!command,
+    enabled:
+      !!session && !!request_id && !!command && queryArgs?.enable !== false,
     queryFn: async () => {
       if (!session || !request_id || !command) {
         return undefined;

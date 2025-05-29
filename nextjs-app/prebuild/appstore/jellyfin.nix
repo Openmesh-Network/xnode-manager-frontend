@@ -13,11 +13,11 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
-          # START USER SETTINGS
+          # START USER CONFIG
           networking.hostName = "jellyfin";
           nixpkgs.hostPlatform = "x86_64-linux";
           system.stateVersion = "25.11";
-          # END USER SETTINGS
+          # END USER CONFIG
 
           services.jellyfin.enable = true;
           services.jellyfin.openFirewall = true;

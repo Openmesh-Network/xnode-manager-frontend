@@ -13,7 +13,7 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
-          # START USER SETTINGS
+          # START USER CONFIG
           services.minecraft-server.serverProperties = {
             motd = "Minecraft server running on Xnode!";
           };
@@ -21,7 +21,7 @@
           networking.hostName = "minecraft-server";
           nixpkgs.hostPlatform = "x86_64-linux";
           system.stateVersion = "25.11";
-          # END USER SETTINGS
+          # END USER CONFIG
 
           services.minecraft-server.enable = true;
           services.minecraft-server.eula = true;

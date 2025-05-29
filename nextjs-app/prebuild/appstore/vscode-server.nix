@@ -12,11 +12,11 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
-          # START USER SETTINGS
+          # START USER CONFIG
           networking.hostName = "vscode-server";
           nixpkgs.hostPlatform = "x86_64-linux";
           system.stateVersion = "25.11";
-          # END USER SETTINGS
+          # END USER CONFIG
 
           services.openvscode-server.enable = true;
           services.openvscode-server.host = "0.0.0.0";

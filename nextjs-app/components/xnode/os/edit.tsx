@@ -12,81 +12,83 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { changeConfig, Session } from "@/lib/xnode";
+import { Session, setOS } from "@/lib/xnode";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useEffect, useState } from "react";
 import { useRequestPopup } from "../request-popup";
-import { useContainerConfig } from "@/hooks/useXnode";
+import { useOS } from "@/hooks/useXnode";
+import { Input } from "@/components/ui/input";
 import { NixEditor } from "@/components/ui/nix-editor";
 
-export interface AppEditParams {
+export interface OSEditParams {
   session?: Session;
-  containerId: string;
 }
 
-export function AppEdit(params: AppEditParams) {
+export function OSEdit(params: OSEditParams) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>Edit</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-7xl">
-        <AppEditInner {...params} />
+        <OSEditInner {...params} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function AppEditInner({ session, containerId }: AppEditParams) {
+export function OSEditInner({ session }: OSEditParams) {
   const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
 
-  const { data: config } = useContainerConfig({
+  const { data: config } = useOS({
     session,
-    containerId,
   });
 
-  const [networkEdit, setNetworkEdit] = useState<string>("");
   const [flakeEdit, setFlakeEdit] = useState<string>("");
+  const [xnodeOwnerEdit, setXnodeOwnerEdit] = useState<string>("");
+  const [domainEdit, setDomainEdit] = useState<string>("");
+  const [acmeEmailEdit, setAcmeEmailEdit] = useState<string>("");
 
   useEffect(() => {
     if (!config) {
       return;
     }
 
-    setNetworkEdit(config.network ?? "host");
     setFlakeEdit(config.flake);
+    setXnodeOwnerEdit(config.xnode_owner ?? "");
+    setDomainEdit(config.domain ?? "");
+    setAcmeEmailEdit(config.acme_email ?? "");
   }, [config]);
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>Edit {containerId}</DialogTitle>
-        <DialogDescription>Edit app configuration</DialogDescription>
+        <DialogTitle>Edit OS</DialogTitle>
+        <DialogDescription>
+          Edit operating system configuration
+        </DialogDescription>
       </DialogHeader>
       {config && (
         <div className="flex flex-col gap-2">
-          <Item title="Network">
-            <Select
-              value={networkEdit}
-              onValueChange={(v) => setNetworkEdit(v)}
-            >
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="host">host</SelectItem>
-                <SelectItem value="containernet">containernet</SelectItem>
-              </SelectContent>
-            </Select>
+          <Item title="Owner">
+            <Input
+              value={xnodeOwnerEdit}
+              onChange={(e) => setXnodeOwnerEdit(e.target.value)}
+            />
+          </Item>
+          <Item title="Domain">
+            <Input
+              value={domainEdit}
+              onChange={(e) => setDomainEdit(e.target.value)}
+            />
+          </Item>
+          <Item title="ACME Email">
+            <Input
+              value={acmeEmailEdit}
+              onChange={(e) => setAcmeEmailEdit(e.target.value)}
+            />
           </Item>
           <NixEditor title="Flake" value={flakeEdit} onChange={setFlakeEdit} />
         </div>
@@ -96,11 +98,15 @@ export function AppEditInner({ session, containerId }: AppEditParams) {
           <Button
             onClick={() => {
               setFlakeEdit(config.flake);
-              setNetworkEdit(config.network ?? "host");
+              setXnodeOwnerEdit(config.xnode_owner ?? "");
+              setDomainEdit(config.domain ?? "");
+              setAcmeEmailEdit(config.acme_email ?? "");
             }}
             disabled={
               flakeEdit === config.flake &&
-              networkEdit === (config.network ?? "host")
+              xnodeOwnerEdit === (config.xnode_owner ?? "") &&
+              domainEdit === (config.domain ?? "") &&
+              acmeEmailEdit === (config.acme_email ?? "")
             }
           >
             Reset
@@ -109,25 +115,21 @@ export function AppEditInner({ session, containerId }: AppEditParams) {
             <DialogClose asChild>
               <Button
                 onClick={() => {
-                  changeConfig({
+                  setOS({
                     session,
-                    changes: [
-                      {
-                        Set: {
-                          container: containerId,
-                          settings: {
-                            flake: flakeEdit,
-                            network: networkEdit === "host" ? "" : networkEdit,
-                          },
-                        },
-                      },
-                    ],
+                    os: {
+                      flake: flakeEdit,
+                      xnode_owner: xnodeOwnerEdit,
+                      domain: domainEdit,
+                      acme_email: acmeEmailEdit,
+                      as_child: false,
+                    },
                   }).then((res) =>
                     setRequestPopup({
                       ...res,
                       onFinish: () => {
                         queryClient.invalidateQueries({
-                          queryKey: ["container", containerId, session.baseUrl],
+                          queryKey: ["OS", session.baseUrl],
                         });
                       },
                     })

@@ -86,7 +86,6 @@ export function AppFileExplorerInner({
               root
             </BreadcrumbLink>
             {segments
-              .slice(0, -1)
               .map((s, i) => (
                 <BreadcrumbItem key={i * 2}>
                   <BreadcrumbLink
@@ -100,12 +99,6 @@ export function AppFileExplorerInner({
                 </BreadcrumbItem>
               ))
               .flatMap((x, i) => [<BreadcrumbSeparator key={i * 2 + 1} />, x])}
-            {segments.length > 0 && (
-              <>
-                <BreadcrumbSeparator />
-                <BreadcrumbPage>{segments.at(-1)}</BreadcrumbPage>
-              </>
-            )}
           </BreadcrumbList>
         </Breadcrumb>
         {!currentFileContents && (

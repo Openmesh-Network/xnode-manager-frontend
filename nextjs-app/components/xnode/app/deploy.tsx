@@ -25,6 +25,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
+import { NixEditor } from "@/components/ui/nix-editor";
 
 export interface AppDeployParams {
   session?: Session;
@@ -83,13 +84,7 @@ export function AppDeployInner({ session, template }: AppDeployParams) {
             </SelectContent>
           </Select>
         </Item>
-        <Item title="Flake">
-          <Textarea
-            className="max-h-96"
-            value={flakeEdit}
-            onChange={(e) => setFlakeEdit(e.target.value)}
-          />
-        </Item>
+        <NixEditor title="Flake" value={flakeEdit} onChange={setFlakeEdit} />
       </div>
       <DialogFooter>
         <Button

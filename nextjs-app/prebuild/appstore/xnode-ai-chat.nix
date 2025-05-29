@@ -16,7 +16,7 @@
         inputs.xnode-manager.nixosModules.container
         inputs.xnode-ai-chat.nixosModules.default
         {
-          # START USER SETTINGS
+          # START USER CONFIG
           services.xnode-ai-chat.defaultModel = "deepseek-r1";
           services.xnode-ai-chat.admin.email = "xnode@openmesh.network";
           services.xnode-ai-chat.admin.password = "hunter12";
@@ -24,7 +24,7 @@
           networking.hostName = "xnode-ai-chat";
           nixpkgs.hostPlatform = "x86_64-linux";
           system.stateVersion = "25.11";
-          # END USER SETTINGS
+          # END USER CONFIG
 
           services.xnode-ai-chat.enable = true;
 

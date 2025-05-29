@@ -26,6 +26,7 @@ import {
 } from "../ui/accordion";
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
+import { CheckCircle, Hourglass, X } from "lucide-react";
 
 export interface RequestPopup {
   request_id?: number;
@@ -130,11 +131,21 @@ export function RequestCommand({
   request_id?: number;
   command: string;
 }) {
+  const [updateInfo, setUpdateInfo] = useState<boolean>(true);
   const { data: commandInfo } = useCommandInfo({
     session,
     request_id,
     command,
+    queryArgs: {
+      enable: updateInfo,
+    },
   });
+
+  useEffect(() => {
+    if (commandInfo?.result) {
+      setUpdateInfo(false);
+    }
+  }, [commandInfo?.result]);
 
   const errScrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollErrToBottom = useMemo(() => {
@@ -154,7 +165,18 @@ export function RequestCommand({
   return (
     commandInfo && (
       <AccordionItem value={command}>
-        <AccordionTrigger>{commandInfo.command}</AccordionTrigger>
+        <AccordionTrigger>
+          <div className="flex gap-2">
+            {commandInfo.result === "0" ? (
+              <CheckCircle className="shrink-0 text-green-600" />
+            ) : commandInfo.result === "1" ? (
+              <X className="shrink-0 text-red-600" />
+            ) : (
+              <Hourglass className="shrink-0" />
+            )}
+            <span>{commandInfo.command}</span>
+          </div>
+        </AccordionTrigger>
         <AccordionContent>
           <div ref={errScrollAreaRef}>
             <ScrollArea className="rounded border bg-black h-[500px]">

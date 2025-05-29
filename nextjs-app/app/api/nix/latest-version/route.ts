@@ -19,6 +19,8 @@ export async function GET(req: NextRequest) {
       flake,
       "--json",
       "--no-use-registries",
+      "--refresh",
+      "--no-write-lock-file",
     ]);
     const output: string[] = [];
     metadata.stdout.on("data", (data) => {

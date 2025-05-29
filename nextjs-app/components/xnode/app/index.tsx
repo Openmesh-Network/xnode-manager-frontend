@@ -6,7 +6,6 @@ import { Title } from "../../text";
 import { AppEdit } from "./edit";
 import { AppFileExplorer } from "./file-explorer";
 import { AppLogs } from "./processes";
-import { Button } from "@/components/ui/button";
 import { AppDelete } from "./delete";
 import { AppUpdate } from "./update";
 

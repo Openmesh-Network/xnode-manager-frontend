@@ -30,6 +30,7 @@ import { setOS } from "@/lib/xnode";
 import { App } from "./app";
 import { AppStore } from "./app/store";
 import { RequestPopupProvider } from "./request-popup";
+import { OS } from "./os";
 
 export function XnodeDetailed({ domain }: { domain?: string }) {
   const settings = useSettings();
@@ -115,6 +116,9 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
             )}
           </div>
         </Section>
+        <SectionCard title="Host">
+          <OS session={session} />
+        </SectionCard>
         {apps && (
           <SectionCard title="Apps">
             <AppStore session={session} exclude={apps} />
