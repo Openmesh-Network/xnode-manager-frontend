@@ -122,7 +122,6 @@ export function OSEditInner({ session }: OSEditParams) {
                       xnode_owner: xnodeOwnerEdit,
                       domain: domainEdit,
                       acme_email: acmeEmailEdit,
-                      as_child: false,
                     },
                   }).then((res) =>
                     setRequestPopup({

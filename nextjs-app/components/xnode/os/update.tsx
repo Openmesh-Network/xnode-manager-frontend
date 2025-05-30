@@ -141,7 +141,6 @@ function OSUpdateInner({ session }: OSUpdateParams) {
                   session,
                   os: {
                     update_inputs: updateInputs,
-                    as_child: false,
                   },
                 }).then((res) =>
                   setRequestPopup({

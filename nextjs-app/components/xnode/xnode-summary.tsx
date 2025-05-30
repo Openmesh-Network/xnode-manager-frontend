@@ -1,8 +1,8 @@
 "use client";
 
-import { Xnode } from "../context/settings";
+import { useSetSettings, useSettings, Xnode } from "../context/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { AlertTriangle } from "lucide-react";
+import { AlertTriangle, Trash2 } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
@@ -13,6 +13,7 @@ import { useCpu, useDisk, useMemory, useSession } from "@/hooks/useXnode";
 import { Bar } from "../charts/bar";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Button } from "../ui/button";
 
 export function XnodeSummary({ xnode }: { xnode: Xnode }) {
   const { data: session } = useSession({ xnode });
@@ -27,10 +28,31 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
     }, 500);
   }, [connectingDots, setConnectingDots]);
 
+  const settings = useSettings();
+  const setSettings = useSetSettings();
+
   return (
     <Card className="gap-0">
       <CardHeader>
-        <CardTitle className="text-xl">{xnode.domain}</CardTitle>
+        <CardTitle className="text-xl">
+          <div className="flex place-items-center">
+            <span>{xnode.domain}</span>
+            <div className="grow" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                setSettings({
+                  ...settings,
+                  xnodes: settings.xnodes.filter((x) => x !== xnode),
+                });
+              }}
+            >
+              <Trash2 className="text-red-600" />
+            </Button>
+          </div>
+        </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">

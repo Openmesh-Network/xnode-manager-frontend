@@ -13,6 +13,9 @@
         inputs.xnode-manager.nixosModules.container
         {
           # START USER CONFIG
+          # Put /?tkn=MYSUPERSECRETTOKEN in the address bar or replace with `services.openvscode-server.withoutConnectionToken = true;`
+          services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";
+
           networking.hostName = "vscode-server";
           nixpkgs.hostPlatform = "x86_64-linux";
           system.stateVersion = "25.11";
@@ -20,7 +23,6 @@
 
           services.openvscode-server.enable = true;
           services.openvscode-server.host = "0.0.0.0";
-          services.openvscode-server.withoutConnectionToken = true;
 
           networking.firewall.allowedTCPPorts = [ 3000 ];
         }

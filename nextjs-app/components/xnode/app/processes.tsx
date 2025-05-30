@@ -24,6 +24,7 @@ import {
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useRequestPopup } from "../request-popup";
 import { useQueryClient } from "@tanstack/react-query";
+import { Input } from "@/components/ui/input";
 
 export interface AppLogsParams {
   session?: Session;
@@ -54,6 +55,7 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
   const [currentProcess, setCurrentProcess] = useState<string | undefined>(
     undefined
   );
+  const [startProcess, setStartProcess] = useState<string>("");
 
   const { data: currentProcessLogs } = useLogs({
     session,
@@ -85,35 +87,73 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
       </DialogHeader>
       <div className="flex flex-col gap-2">
         {processes && !currentProcess && (
-          <ScrollArea className="h-[700px]">
-            <div className="flex flex-col">
-              {processes
-                .sort((p1, p2) => {
-                  if (p1.running && !p2.running) {
-                    return -1;
-                  }
+          <>
+            <ScrollArea className="h-[700px]">
+              <div className="flex flex-col">
+                {processes
+                  .sort((p1, p2) => {
+                    if (p1.running && !p2.running) {
+                      return -1;
+                    }
 
-                  if (p2.running && !p1.running) {
-                    return 1;
-                  }
+                    if (p2.running && !p1.running) {
+                      return 1;
+                    }
 
-                  return 0;
-                })
-                .map((p) => (
-                  <Button
-                    key={p.name}
-                    variant="outline"
-                    className="flex gap-2 justify-start"
-                    onClick={() => setCurrentProcess(p.name)}
-                  >
-                    {p.running ? <CheckCircle /> : <X />}
-                    <span>
-                      {p.name}: {p.description}
-                    </span>
-                  </Button>
-                ))}
-            </div>
-          </ScrollArea>
+                    return 0;
+                  })
+                  .map((p) => (
+                    <Button
+                      key={p.name}
+                      variant="outline"
+                      className="flex gap-2 justify-start"
+                      onClick={() => setCurrentProcess(p.name)}
+                    >
+                      {p.running ? <CheckCircle /> : <X />}
+                      <span>
+                        {p.name}: {p.description}
+                      </span>
+                    </Button>
+                  ))}
+              </div>
+            </ScrollArea>
+            {session && (
+              <div className="flex gap-1">
+                <Input
+                  value={startProcess}
+                  onChange={(e) => setStartProcess(e.target.value)}
+                />
+                <Button
+                  className="flex gap-1"
+                  onClick={() => {
+                    executeProcess({
+                      session,
+                      containerId,
+                      process: startProcess,
+                      command: "Start",
+                    }).then((res) =>
+                      setRequestPopup({
+                        ...res,
+                        onFinish: () => {
+                          queryClient.invalidateQueries({
+                            queryKey: [
+                              "processes",
+                              containerId,
+                              session.baseUrl,
+                            ],
+                          });
+                        },
+                      })
+                    );
+                    setStartProcess("");
+                  }}
+                >
+                  <Play />
+                  <span>Start</span>
+                </Button>
+              </div>
+            )}
+          </>
         )}
         {currentProcess && (
           <div className="flex flex-col gap-3">

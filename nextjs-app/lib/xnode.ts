@@ -49,8 +49,6 @@ export interface OSChange {
   domain?: string;
   acme_email?: string;
   user_passwd?: string;
-
-  as_child: boolean;
 }
 
 export type Container = string;
@@ -140,11 +138,11 @@ export async function login({
   sig: Hex;
 }): Promise<Session> {
   const axiosInstance = axios.create({
-    // httpsAgent: new https.Agent({ rejectUnauthorized: false }), // Allow self-signed certificates (for "recovery mode", no secrets should be shared from the client)
     withCredentials: true, // Store cookies
   });
-  const prefix = insecure ? "xnode-forward-insecure" : "xnode-forward";
-  const baseUrl = `/${prefix}/${domain}`;
+  const baseUrl = insecure
+    ? `/xnode-forward-insecure/${domain}`
+    : `https://${domain}`;
 
   const signature = parseSignature(sig);
   await axiosInstance.post(`${baseUrl}/auth/login`, {

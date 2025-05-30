@@ -1,5 +1,4 @@
 {
-  # BROKEN
   inputs = {
     xnode-manager.url = "github:Openmesh-Network/xnode-manager";
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
