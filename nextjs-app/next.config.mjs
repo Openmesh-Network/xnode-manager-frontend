@@ -4,7 +4,8 @@ const nextConfig = {
   reactStrictMode: true,
   rewrites: () => [
     {
-      source: "/xnode-forward-insecure/:ip/:call*",
+      // HTTP requests require a forward proxy
+      source: "/xnode-forward/:ip/:call*",
       destination: "http://:ip:34391/:call*",
     },
   ],

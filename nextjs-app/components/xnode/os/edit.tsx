@@ -12,17 +12,16 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Session, setOS } from "@/lib/xnode";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useEffect, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { useOS } from "@/hooks/useXnode";
 import { Input } from "@/components/ui/input";
 import { NixEditor } from "@/components/ui/nix-editor";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export interface OSEditParams {
-  session?: Session;
+  session?: xnode.utils.Session;
 }
 
 export function OSEdit(params: OSEditParams) {
@@ -115,24 +114,28 @@ export function OSEditInner({ session }: OSEditParams) {
             <DialogClose asChild>
               <Button
                 onClick={() => {
-                  setOS({
-                    session,
-                    os: {
-                      flake: flakeEdit,
-                      xnode_owner: xnodeOwnerEdit,
-                      domain: domainEdit,
-                      acme_email: acmeEmailEdit,
-                    },
-                  }).then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ["OS", session.baseUrl],
-                        });
+                  xnode.os
+                    .set({
+                      session,
+                      os: {
+                        flake: flakeEdit,
+                        xnode_owner: xnodeOwnerEdit,
+                        domain: domainEdit,
+                        acme_email: acmeEmailEdit,
+                        user_passwd: null,
+                        update_inputs: null,
                       },
                     })
-                  );
+                    .then((res) =>
+                      setRequestPopup({
+                        ...res,
+                        onFinish: () => {
+                          queryClient.invalidateQueries({
+                            queryKey: ["OS", session.baseUrl],
+                          });
+                        },
+                      })
+                    );
                 }}
               >
                 Apply

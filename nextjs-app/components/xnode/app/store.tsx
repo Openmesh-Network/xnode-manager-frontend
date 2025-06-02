@@ -12,11 +12,11 @@ import {
 } from "@/components/ui/dialog";
 import { Plus } from "lucide-react";
 import appstore from "@/public/appstore.json";
-import { Session } from "@/lib/xnode";
 import { AppDeploy } from "./deploy";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export interface AppStoreParams {
-  session?: Session;
+  session?: xnode.utils.Session;
   exclude?: string[];
 }
 

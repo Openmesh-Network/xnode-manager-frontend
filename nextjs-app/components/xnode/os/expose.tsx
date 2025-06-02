@@ -11,7 +11,6 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { Session, setOS } from "@/lib/xnode";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
@@ -33,9 +32,10 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export interface OSExposeParams {
-  session?: Session;
+  session?: xnode.utils.Session;
 }
 
 export function OSExpose(params: OSExposeParams) {
@@ -396,21 +396,28 @@ export function OSExposeInner({ session }: OSExposeParams) {
                         newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
                     }
                   });
-                  setOS({
-                    session,
-                    os: {
-                      flake: config.flake.replace(userConfig, newUserConfig),
-                    },
-                  }).then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ["OS", session.baseUrl],
-                        });
+                  xnode.os
+                    .set({
+                      session,
+                      os: {
+                        flake: config.flake.replace(userConfig, newUserConfig),
+                        xnode_owner: null,
+                        domain: null,
+                        acme_email: null,
+                        user_passwd: null,
+                        update_inputs: null,
                       },
                     })
-                  );
+                    .then((res) =>
+                      setRequestPopup({
+                        ...res,
+                        onFinish: () => {
+                          queryClient.invalidateQueries({
+                            queryKey: ["OS", session.baseUrl],
+                          });
+                        },
+                      })
+                    );
                 }}
               >
                 Apply

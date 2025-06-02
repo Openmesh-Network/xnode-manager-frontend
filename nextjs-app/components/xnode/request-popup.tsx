@@ -9,7 +9,6 @@ import {
   useState,
 } from "react";
 import { useCommandInfo, useRequestInfo } from "@/hooks/useXnode";
-import { RequestInfo, Session } from "@/lib/xnode";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -27,10 +26,12 @@ import {
 import { ScrollArea } from "../ui/scroll-area";
 import { Button } from "../ui/button";
 import { CheckCircle, Hourglass, X } from "lucide-react";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { Ansi } from "../ui/ansi";
 
 export interface RequestPopup {
   request_id?: number;
-  onFinish?: (result: RequestInfo["result"]) => void;
+  onFinish?: (result: xnode.request.RequestInfo["result"]) => void;
 }
 const defaultRequestPopup: RequestPopup = {};
 const SetRequestPopupContext = createContext<
@@ -41,7 +42,7 @@ export function RequestPopupProvider({
   session,
   children,
 }: {
-  session?: Session;
+  session?: xnode.utils.Session;
   children: React.ReactNode;
 }) {
   const [requestPopup, setRequestPopup] =
@@ -56,7 +57,10 @@ export function RequestPopupProvider({
   });
 
   const close = useMemo(() => {
-    return (requestPopup: RequestPopup, result: RequestInfo["result"]) => {
+    return (
+      requestPopup: RequestPopup,
+      result: xnode.request.RequestInfo["result"]
+    ) => {
       requestPopup.onFinish?.(result);
       setRequestPopup({});
     };
@@ -67,7 +71,7 @@ export function RequestPopupProvider({
   }, [requestInfo?.commands]);
 
   useEffect(() => {
-    if (requestInfo && requestInfo.result?.Success) {
+    if (requestInfo && requestInfo.result && "Success" in requestInfo.result) {
       close(requestPopup, requestInfo.result);
     }
   }, [requestPopup, requestInfo]);
@@ -127,7 +131,7 @@ export function RequestCommand({
   request_id,
   command,
 }: {
-  session?: Session;
+  session?: xnode.utils.Session;
   request_id?: number;
   command: string;
 }) {
@@ -181,9 +185,17 @@ export function RequestCommand({
           <div ref={errScrollAreaRef}>
             <ScrollArea className="rounded border bg-black h-[500px]">
               <div className="px-3 py-2 font-mono text-muted flex flex-col">
-                {commandInfo.stderr.split("\n").map((line, i) => (
-                  <span key={i}>{line}</span>
-                ))}
+                {"UTF8" in commandInfo.stderr ? (
+                  commandInfo.stderr.UTF8.output
+                    .split("\n")
+                    .map((line, i) => <span key={i}>{line}</span>)
+                ) : (
+                  <Ansi>
+                    {Buffer.from(commandInfo.stderr.Bytes.output).toString(
+                      "utf-8"
+                    )}
+                  </Ansi>
+                )}
               </div>
             </ScrollArea>
           </div>

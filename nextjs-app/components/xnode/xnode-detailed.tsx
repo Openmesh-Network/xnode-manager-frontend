@@ -13,20 +13,7 @@ import {
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { UsageChart, UsageHistory } from "../charts/usage-chart";
 import { Section, Title } from "../text";
-import { Button } from "../ui/button";
 import { Bar } from "../charts/bar";
-import { Label } from "../ui/label";
-import { Input } from "../ui/input";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { useRouter } from "next/navigation";
-import {
-  AlertDialog,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../ui/alert-dialog";
-import { setOS } from "@/lib/xnode";
 import { App } from "./app";
 import { AppStore } from "./app/store";
 import { RequestPopupProvider } from "./request-popup";
@@ -34,7 +21,6 @@ import { OS } from "./os";
 
 export function XnodeDetailed({ domain }: { domain?: string }) {
   const settings = useSettings();
-  const setSettings = useSetSettings();
   const xnode = useMemo(
     () => settings.xnodes.find((x) => x.domain === domain),
     [settings.xnodes]
@@ -124,7 +110,7 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
             <AppStore session={session} exclude={apps} />
             <div className="flex gap-3 flex-wrap">
               {apps.map((app) => (
-                <App key={app} session={session} containerId={app} />
+                <App key={app} session={session} container={app} />
               ))}
             </div>
           </SectionCard>

@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useLogs, useProcesses } from "@/hooks/useXnode";
-import { executeProcess, Session } from "@/lib/xnode";
 import {
   CheckCircle,
   X,
@@ -25,32 +24,33 @@ import { useState, useRef, useMemo, useEffect } from "react";
 import { useRequestPopup } from "../request-popup";
 import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
-export interface AppLogsParams {
-  session?: Session;
-  containerId: string;
+export interface AppProcessesParams {
+  session?: xnode.utils.Session;
+  container: string;
 }
 
-export function AppLogs(params: AppLogsParams) {
+export function AppProcesses(params: AppProcessesParams) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>Processes</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-7xl">
-        <AppLogsInner {...params} />
+        <AppProcessesInner {...params} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function AppLogsInner({ session, containerId }: AppLogsParams) {
+export function AppProcessesInner({ session, container }: AppProcessesParams) {
   const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
 
   const { data: processes } = useProcesses({
     session,
-    containerId,
+    container,
   });
   const [currentProcess, setCurrentProcess] = useState<string | undefined>(
     undefined
@@ -59,7 +59,7 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
 
   const { data: currentProcessLogs } = useLogs({
     session,
-    containerId,
+    container,
     process: currentProcess,
   });
   const logsScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -80,7 +80,7 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{containerId} processes</DialogTitle>
+        <DialogTitle>{container} processes</DialogTitle>
         <DialogDescription>
           Inspect and manage processes running in the app
         </DialogDescription>
@@ -126,25 +126,27 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
                 <Button
                   className="flex gap-1"
                   onClick={() => {
-                    executeProcess({
-                      session,
-                      containerId,
-                      process: startProcess,
-                      command: "Start",
-                    }).then((res) =>
-                      setRequestPopup({
-                        ...res,
-                        onFinish: () => {
-                          queryClient.invalidateQueries({
-                            queryKey: [
-                              "processes",
-                              containerId,
-                              session.baseUrl,
-                            ],
-                          });
-                        },
+                    xnode.process
+                      .execute({
+                        session,
+                        container,
+                        process: startProcess,
+                        command: "Start",
                       })
-                    );
+                      .then((res) =>
+                        setRequestPopup({
+                          ...res,
+                          onFinish: () => {
+                            queryClient.invalidateQueries({
+                              queryKey: [
+                                "processes",
+                                container,
+                                session.baseUrl,
+                              ],
+                            });
+                          },
+                        })
+                      );
                     setStartProcess("");
                   }}
                 >
@@ -175,25 +177,27 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
                       <Button
                         className="flex gap-1"
                         onClick={() => {
-                          executeProcess({
-                            session,
-                            containerId,
-                            process: currentProcess,
-                            command: "Stop",
-                          }).then((res) =>
-                            setRequestPopup({
-                              ...res,
-                              onFinish: () => {
-                                queryClient.invalidateQueries({
-                                  queryKey: [
-                                    "processes",
-                                    containerId,
-                                    session.baseUrl,
-                                  ],
-                                });
-                              },
+                          xnode.process
+                            .execute({
+                              session,
+                              container,
+                              process: currentProcess,
+                              command: "Stop",
                             })
-                          );
+                            .then((res) =>
+                              setRequestPopup({
+                                ...res,
+                                onFinish: () => {
+                                  queryClient.invalidateQueries({
+                                    queryKey: [
+                                      "processes",
+                                      container,
+                                      session.baseUrl,
+                                    ],
+                                  });
+                                },
+                              })
+                            );
                         }}
                       >
                         <Square />
@@ -202,16 +206,18 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
                       <Button
                         className="flex gap-1"
                         onClick={() => {
-                          executeProcess({
-                            session,
-                            containerId,
-                            process: currentProcess,
-                            command: "Restart",
-                          }).then((res) =>
-                            setRequestPopup({
-                              ...res,
+                          xnode.process
+                            .execute({
+                              session,
+                              container,
+                              process: currentProcess,
+                              command: "Restart",
                             })
-                          );
+                            .then((res) =>
+                              setRequestPopup({
+                                ...res,
+                              })
+                            );
                         }}
                       >
                         <RefreshCw />
@@ -222,25 +228,27 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
                     <Button
                       className="flex gap-1"
                       onClick={() => {
-                        executeProcess({
-                          session,
-                          containerId,
-                          process: currentProcess,
-                          command: "Start",
-                        }).then((res) =>
-                          setRequestPopup({
-                            ...res,
-                            onFinish: () => {
-                              queryClient.invalidateQueries({
-                                queryKey: [
-                                  "processes",
-                                  containerId,
-                                  session.baseUrl,
-                                ],
-                              });
-                            },
+                        xnode.process
+                          .execute({
+                            session,
+                            container,
+                            process: currentProcess,
+                            command: "Start",
                           })
-                        );
+                          .then((res) =>
+                            setRequestPopup({
+                              ...res,
+                              onFinish: () => {
+                                queryClient.invalidateQueries({
+                                  queryKey: [
+                                    "processes",
+                                    container,
+                                    session.baseUrl,
+                                  ],
+                                });
+                              },
+                            })
+                          );
                       }}
                     >
                       <Play />
@@ -255,11 +263,13 @@ export function AppLogsInner({ session, containerId }: AppLogsParams) {
                 <ScrollArea className="rounded border bg-black h-[500px]">
                   <div className="px-3 py-2 font-mono text-muted flex flex-col">
                     {currentProcessLogs.map((log, i) =>
-                      log.message.type === "string" ? (
-                        <span key={i}>{log.message.string}</span>
+                      "UTF8" in log.message ? (
+                        <span key={i}>{log.message.UTF8.output}</span>
                       ) : (
                         <Ansi key={i}>
-                          {Buffer.from(log.message.bytes).toString("utf-8")}
+                          {Buffer.from(log.message.Bytes.output).toString(
+                            "utf-8"
+                          )}
                         </Ansi>
                       )
                     )}

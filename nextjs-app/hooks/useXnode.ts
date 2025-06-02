@@ -1,20 +1,5 @@
 import { useSettings, Xnode } from "@/components/context/settings";
-import {
-  commandInfo,
-  cpuUsage,
-  diskUsage,
-  getContainerConfig,
-  getContainers,
-  getDirectory,
-  getFile,
-  getLogs,
-  getOS,
-  getProcesses,
-  login,
-  memoryUsage,
-  requestInfo,
-  Session,
-} from "@/lib/xnode";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { useQuery } from "@tanstack/react-query";
 
 const usageRefetchInterval = 1000; // 1 sec
@@ -30,7 +15,7 @@ export interface QueryArgs {
 }
 
 export function useSession({
-  xnode,
+  xnode: xnodeServer,
   queryArgs,
 }: {
   xnode?: Xnode;
@@ -38,24 +23,30 @@ export function useSession({
 }) {
   const { wallets } = useSettings();
   return useQuery({
-    queryKey: ["session", xnode?.domain ?? "", xnode?.insecure ?? false],
-    enabled: !!xnode && queryArgs?.enable !== false,
+    queryKey: [
+      "session",
+      xnodeServer?.domain ?? "",
+      xnodeServer?.insecure ?? false,
+    ],
+    enabled: !!xnodeServer && queryArgs?.enable !== false,
     queryFn: async () => {
-      if (!xnode) {
+      if (!xnodeServer) {
         return undefined;
       }
 
-      const session = await login({
-        domain: xnode.domain,
-        insecure: xnode.insecure,
-        sig: wallets[xnode.owner],
+      const baseUrl = xnodeServer.insecure
+        ? `/xnode-forward/${xnodeServer.domain}`
+        : `https://${xnodeServer.domain}`; // HTTP requests require a forward proxy
+      const session = await xnode.auth.login({
+        baseUrl,
+        sig: wallets[xnodeServer.owner],
       });
       return session;
     },
   });
 }
 
-export function useCpu({ session }: { session?: Session }) {
+export function useCpu({ session }: { session?: xnode.utils.Session }) {
   return useQuery({
     queryKey: ["cpu", session?.baseUrl ?? ""],
     enabled: !!session,
@@ -64,13 +55,13 @@ export function useCpu({ session }: { session?: Session }) {
         return undefined;
       }
 
-      return await cpuUsage({ session });
+      return await xnode.usage.cpu({ session });
     },
     refetchInterval: usageRefetchInterval,
   });
 }
 
-export function useMemory({ session }: { session?: Session }) {
+export function useMemory({ session }: { session?: xnode.utils.Session }) {
   return useQuery({
     queryKey: ["memory", session?.baseUrl ?? ""],
     enabled: !!session,
@@ -79,13 +70,13 @@ export function useMemory({ session }: { session?: Session }) {
         return undefined;
       }
 
-      return await memoryUsage({ session });
+      return await xnode.usage.memory({ session });
     },
     refetchInterval: usageRefetchInterval,
   });
 }
 
-export function useDisk({ session }: { session?: Session }) {
+export function useDisk({ session }: { session?: xnode.utils.Session }) {
   return useQuery({
     queryKey: ["disk", session?.baseUrl ?? ""],
     enabled: !!session,
@@ -94,13 +85,13 @@ export function useDisk({ session }: { session?: Session }) {
         return undefined;
       }
 
-      return await diskUsage({ session });
+      return await xnode.usage.disk({ session });
     },
     refetchInterval: usageRefetchInterval,
   });
 }
 
-export function useOS({ session }: { session?: Session }) {
+export function useOS({ session }: { session?: xnode.utils.Session }) {
   return useQuery({
     queryKey: ["OS", session?.baseUrl ?? ""],
     enabled: !!session,
@@ -109,13 +100,13 @@ export function useOS({ session }: { session?: Session }) {
         return undefined;
       }
 
-      return await getOS({ session });
+      return await xnode.os.get({ session });
     },
     refetchInterval: OSRefetchInterval,
   });
 }
 
-export function useContainers({ session }: { session?: Session }) {
+export function useContainers({ session }: { session?: xnode.utils.Session }) {
   return useQuery({
     queryKey: ["containers", session?.baseUrl ?? ""],
     enabled: !!session,
@@ -124,7 +115,7 @@ export function useContainers({ session }: { session?: Session }) {
         return undefined;
       }
 
-      return await getContainers({ session });
+      return await xnode.config.containers({ session });
     },
     refetchInterval: containersRefetchInterval,
   });
@@ -132,20 +123,20 @@ export function useContainers({ session }: { session?: Session }) {
 
 export function useContainerConfig({
   session,
-  containerId,
+  container,
 }: {
-  session?: Session;
-  containerId?: string;
+  session?: xnode.utils.Session;
+  container?: string;
 }) {
   return useQuery({
-    queryKey: ["container", containerId, session?.baseUrl ?? ""],
-    enabled: !!session && !!containerId,
+    queryKey: ["container", container, session?.baseUrl ?? ""],
+    enabled: !!session && !!container,
     queryFn: async () => {
-      if (!session || !containerId) {
+      if (!session || !container) {
         return undefined;
       }
 
-      return await getContainerConfig({ session, containerId });
+      return await xnode.config.container({ session, container });
     },
     refetchInterval: containersRefetchInterval,
   });
@@ -153,20 +144,20 @@ export function useContainerConfig({
 
 export function useProcesses({
   session,
-  containerId,
+  container,
 }: {
-  session?: Session;
-  containerId?: string;
+  session?: xnode.utils.Session;
+  container?: string;
 }) {
   return useQuery({
-    queryKey: ["processes", containerId, session?.baseUrl ?? ""],
-    enabled: !!session && !!containerId,
+    queryKey: ["processes", container, session?.baseUrl ?? ""],
+    enabled: !!session && !!container,
     queryFn: async () => {
-      if (!session || !containerId) {
+      if (!session || !container) {
         return undefined;
       }
 
-      return await getProcesses({ session, containerId });
+      return await xnode.process.list({ session, container });
     },
     refetchInterval: processesRefetchInterval,
   });
@@ -174,22 +165,27 @@ export function useProcesses({
 
 export function useLogs({
   session,
-  containerId,
+  container,
   process,
 }: {
-  session?: Session;
-  containerId?: string;
+  session?: xnode.utils.Session;
+  container?: string;
   process?: string;
 }) {
   return useQuery({
-    queryKey: ["logs", containerId, process, session?.baseUrl ?? ""],
-    enabled: !!session && !!containerId && !!process,
+    queryKey: ["logs", container, process, session?.baseUrl ?? ""],
+    enabled: !!session && !!container && !!process,
     queryFn: async () => {
-      if (!session || !containerId || !process) {
+      if (!session || !container || !process) {
         return undefined;
       }
 
-      return await getLogs({ session, containerId, process });
+      return await xnode.process.logs({
+        session,
+        container,
+        process,
+        query: { max: null, level: null },
+      });
     },
     refetchInterval: logsRefetchInterval,
   });
@@ -197,22 +193,25 @@ export function useLogs({
 
 export function useDirectory({
   session,
-  containerId,
+  container,
   path,
 }: {
-  session?: Session;
-  containerId?: string;
+  session?: xnode.utils.Session;
+  container?: string;
   path?: string;
 }) {
   return useQuery({
-    queryKey: ["directory", containerId, path, session?.baseUrl ?? ""],
-    enabled: !!session && !!containerId && !!path,
+    queryKey: ["directory", container, path, session?.baseUrl ?? ""],
+    enabled: !!session && !!container && !!path,
     queryFn: async () => {
-      if (!session || !containerId || !path) {
+      if (!session || !container || !path) {
         return undefined;
       }
 
-      return await getDirectory({ session, location: { containerId, path } });
+      return await xnode.file.read_directory({
+        session,
+        location: { container, path },
+      });
     },
     refetchInterval: fileRefetchInterval,
   });
@@ -220,22 +219,25 @@ export function useDirectory({
 
 export function useFile({
   session,
-  containerId,
+  container,
   path,
 }: {
-  session?: Session;
-  containerId?: string;
+  session?: xnode.utils.Session;
+  container?: string;
   path?: string;
 }) {
   return useQuery({
-    queryKey: ["file", containerId, path, session?.baseUrl ?? ""],
-    enabled: !!session && !!containerId && !!path,
+    queryKey: ["file", container, path, session?.baseUrl ?? ""],
+    enabled: !!session && !!container && !!path,
     queryFn: async () => {
-      if (!session || !containerId || !path) {
+      if (!session || !container || !path) {
         return undefined;
       }
 
-      return await getFile({ session, location: { containerId, path } });
+      return await xnode.file.read_file({
+        session,
+        location: { container, path },
+      });
     },
     refetchInterval: fileRefetchInterval,
   });
@@ -245,7 +247,7 @@ export function useRequestInfo({
   session,
   request_id,
 }: {
-  session?: Session;
+  session?: xnode.utils.Session;
   request_id?: number;
 }) {
   return useQuery({
@@ -256,7 +258,7 @@ export function useRequestInfo({
         return undefined;
       }
 
-      return await requestInfo({ session, request_id: request_id });
+      return await xnode.request.request_info({ session, request_id });
     },
     refetchInterval: requestInterval,
   });
@@ -268,7 +270,7 @@ export function useCommandInfo({
   command,
   queryArgs,
 }: {
-  session?: Session;
+  session?: xnode.utils.Session;
   request_id?: number;
   command?: string;
   queryArgs?: QueryArgs;
@@ -287,7 +289,7 @@ export function useCommandInfo({
         return undefined;
       }
 
-      return await commandInfo({ session, request_id: request_id, command });
+      return await xnode.request.command_info({ session, request_id, command });
     },
     refetchInterval: requestInterval,
   });

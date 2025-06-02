@@ -6,7 +6,6 @@ import {
   BreadcrumbLink,
   BreadcrumbItem,
   BreadcrumbSeparator,
-  BreadcrumbPage,
 } from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import {
@@ -20,13 +19,13 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import { useDirectory, useFile } from "@/hooks/useXnode";
-import { Session, writeFile } from "@/lib/xnode";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { Folder, FileIcon } from "lucide-react";
 import { useState, useMemo } from "react";
 
 export interface AppFileExplorerParams {
-  session?: Session;
-  containerId: string;
+  session?: xnode.utils.Session;
+  container: string;
 }
 
 export function AppFileExplorer(params: AppFileExplorerParams) {
@@ -44,13 +43,13 @@ export function AppFileExplorer(params: AppFileExplorerParams) {
 
 export function AppFileExplorerInner({
   session,
-  containerId,
+  container,
 }: AppFileExplorerParams) {
   const [currentDir, setCurrentDir] = useState<string>("/");
   const { data: currentDirContents, refetch: refetchDirContents } =
     useDirectory({
       session,
-      containerId,
+      container,
       path: currentDir,
     });
   const segments = useMemo(
@@ -61,15 +60,22 @@ export function AppFileExplorerInner({
   const [currentFile, setCurrentFile] = useState<string | undefined>(undefined);
   const { data: currentFileContents, refetch: refetchFileContents } = useFile({
     session,
-    containerId,
+    container,
     path: currentFile,
   });
+  const currentFileContentsString = useMemo(() => {
+    if (!currentFileContents) {
+      return undefined;
+    }
+
+    return xnode.utils.output_to_string(currentFileContents.content);
+  }, [currentFileContents]);
   const [fileEdit, setFileEdit] = useState<string>("");
 
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{containerId} file explorer</DialogTitle>
+        <DialogTitle>{container} file explorer</DialogTitle>
         <DialogDescription>
           View and edit files contained in the app
         </DialogDescription>
@@ -138,21 +144,23 @@ export function AppFileExplorerInner({
           <div className="flex flex-col gap-2">
             <Textarea
               className="max-h-96"
-              value={fileEdit ? fileEdit : currentFileContents.content}
+              value={fileEdit ? fileEdit : currentFileContentsString ?? ""}
               onChange={(e) => setFileEdit(e.target.value)}
             />
             {session && currentFile && (
               <Button
-                disabled={!fileEdit || fileEdit === currentFileContents.content}
+                disabled={!fileEdit || fileEdit === currentFileContentsString}
                 onClick={() => {
-                  writeFile({
-                    session,
-                    location: {
-                      containerId,
-                      path: currentFile,
-                    },
-                    content: fileEdit,
-                  }).then(() => refetchFileContents());
+                  xnode.file
+                    .write_file({
+                      session,
+                      location: {
+                        container,
+                        path: currentFile,
+                      },
+                      content: xnode.utils.string_to_bytes(fileEdit),
+                    })
+                    .then(() => refetchFileContents());
                 }}
               >
                 Save

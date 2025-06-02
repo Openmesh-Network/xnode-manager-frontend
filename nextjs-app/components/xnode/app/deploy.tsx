@@ -19,16 +19,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { changeConfig, Session } from "@/lib/xnode";
 import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
 import { NixEditor } from "@/components/ui/nix-editor";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export interface AppDeployParams {
-  session?: Session;
+  session?: xnode.utils.Session;
   template: {
     containerId: string;
     flake: string;
@@ -105,33 +104,36 @@ export function AppDeployInner({ session, template }: AppDeployParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
-                changeConfig({
-                  session,
-                  changes: [
-                    {
-                      Set: {
-                        container: containerIdEdit,
-                        settings: {
-                          flake: flakeEdit,
-                          network: networkEdit === "host" ? "" : networkEdit,
+                xnode.config
+                  .change({
+                    session,
+                    changes: [
+                      {
+                        Set: {
+                          container: containerIdEdit,
+                          settings: {
+                            flake: flakeEdit,
+                            network: networkEdit === "host" ? "" : networkEdit,
+                          },
+                          update_inputs: null,
                         },
                       },
-                    },
-                  ],
-                }).then((res) =>
-                  setRequestPopup({
-                    ...res,
-                    onFinish: () => {
-                      queryClient.invalidateQueries({
-                        queryKey: [
-                          "container",
-                          containerIdEdit,
-                          session.baseUrl,
-                        ],
-                      });
-                    },
+                    ],
                   })
-                );
+                  .then((res) =>
+                    setRequestPopup({
+                      ...res,
+                      onFinish: () => {
+                        queryClient.invalidateQueries({
+                          queryKey: [
+                            "container",
+                            containerIdEdit,
+                            session.baseUrl,
+                          ],
+                        });
+                      },
+                    })
+                  );
               }}
             >
               Apply

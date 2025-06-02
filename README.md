@@ -3,7 +3,7 @@
 Web interface to allow anyone to manage their Xnodes.
 https://xnode.openmesh.network/
 
-## Related repos
+## Related Repos
 
 https://github.com/Openmesh-Network/xnode-manager/
 

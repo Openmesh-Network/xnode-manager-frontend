@@ -16,7 +16,7 @@ import { Button } from "../ui/button";
 import { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
-import { login, scopes } from "@/lib/xnode";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export function ImportXnode() {
   const address = useAddress();
@@ -72,8 +72,12 @@ export function ImportXnode() {
 
                 // If domain is ip address, use insecure
                 const insecure = /^(\d{1,3}\.){3}\d{1,3}$/.test(domain);
-                login({ domain, insecure, sig: settings.wallets[address] })
-                  .then((session) => scopes({ session }))
+                const baseUrl = insecure
+                  ? `/xnode-forward/${domain}`
+                  : `https://${domain}`; // HTTP requests require a forward proxy
+                xnode.auth
+                  .login({ baseUrl, sig: settings.wallets[address] })
+                  .then((session) => xnode.auth.scopes({ session }))
                   .then((scopes) => {
                     if (scopes.length > 0) {
                       setSettings({

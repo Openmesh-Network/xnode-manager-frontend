@@ -1,35 +1,35 @@
 "use client";
 
-import { Session } from "@/lib/xnode";
 import { Card, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { Title } from "../../text";
 import { AppEdit } from "./edit";
 import { AppFileExplorer } from "./file-explorer";
-import { AppLogs } from "./processes";
+import { AppProcesses } from "./processes";
 import { AppDelete } from "./delete";
 import { AppUpdate } from "./update";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export function App({
   session,
-  containerId,
+  container,
 }: {
-  session?: Session;
-  containerId: string;
+  session?: xnode.utils.Session;
+  container: string;
 }) {
   return (
     <Card className="gap-2">
       <CardHeader>
         <CardTitle>
-          <Title title={containerId} />
+          <Title title={container} />
         </CardTitle>
       </CardHeader>
       <CardFooter>
         <div className="flex gap-2 flex-wrap max-w-80">
-          <AppLogs session={session} containerId={containerId} />
-          <AppFileExplorer session={session} containerId={containerId} />
-          <AppEdit session={session} containerId={containerId} />
-          <AppUpdate session={session} containerId={containerId} />
-          <AppDelete session={session} containerId={containerId} />
+          <AppProcesses session={session} container={container} />
+          <AppFileExplorer session={session} container={container} />
+          <AppEdit session={session} container={container} />
+          <AppUpdate session={session} container={container} />
+          <AppDelete session={session} container={container} />
         </div>
       </CardFooter>
     </Card>
