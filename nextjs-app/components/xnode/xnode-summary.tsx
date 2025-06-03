@@ -9,17 +9,29 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../ui/tooltip";
-import { useCpu, useDisk, useMemory, useSession } from "@/hooks/useXnode";
 import { Bar } from "../charts/bar";
 import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Button } from "../ui/button";
+import {
+  useAuthSession,
+  useUsageCpu,
+  useUsageDisk,
+  useUsageMemory,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export function XnodeSummary({ xnode }: { xnode: Xnode }) {
-  const { data: session } = useSession({ xnode });
-  const { data: cpu } = useCpu({ session });
-  const { data: memory } = useMemory({ session });
-  const { data: disk } = useDisk({ session });
+  const { wallets } = useSettings();
+  const { data: session } = useAuthSession({
+    baseUrl: xnode.insecure
+      ? `/xnode-forward/${xnode.domain}` // HTTP requests require a forward proxy
+      : `https://${xnode.domain}`,
+    sig: wallets[xnode.owner],
+  });
+
+  const { data: cpu } = useUsageCpu({ session });
+  const { data: memory } = useUsageMemory({ session });
+  const { data: disk } = useUsageDisk({ session });
 
   const [connectingDots, setConnectingDots] = useState(1);
   useEffect(() => {

@@ -11,7 +11,7 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,8 +19,8 @@ import axios from "axios";
 import { LatestVersionReturn } from "@/app/api/nix/latest-version/route";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, Hourglass, TriangleAlert } from "lucide-react";
-import { useOS } from "@/hooks/useXnode";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { useOsGet, useOsSet } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface NixLock {
   nodes: {
@@ -64,10 +64,16 @@ export function OSUpdate(params: OSUpdateParams) {
 }
 
 function OSUpdateInner({ session }: OSUpdateParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: set } = useOsSet({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
-  const { data: config } = useOS({
+  const { data: config } = useOsGet({
     session,
   });
 
@@ -137,28 +143,17 @@ function OSUpdateInner({ session }: OSUpdateParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
-                xnode.os
-                  .set({
-                    session,
-                    os: {
-                      flake: null,
-                      xnode_owner: null,
-                      domain: null,
-                      acme_email: null,
-                      user_passwd: null,
-                      update_inputs: updateInputs,
-                    },
-                  })
-                  .then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ["OS", session.baseUrl],
-                        });
-                      },
-                    })
-                  );
+                set({
+                  session,
+                  data: {
+                    flake: null,
+                    xnode_owner: null,
+                    domain: null,
+                    acme_email: null,
+                    user_passwd: null,
+                    update_inputs: updateInputs,
+                  },
+                });
               }}
               disabled={updateInputs.length === 0}
             >

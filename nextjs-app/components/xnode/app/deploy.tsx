@@ -19,12 +19,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
 import { NixEditor } from "@/components/ui/nix-editor";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { useConfigChange } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppDeployParams {
   session?: xnode.utils.Session;
@@ -48,8 +48,14 @@ export function AppDeploy(params: AppDeployParams) {
 }
 
 export function AppDeployInner({ session, template }: AppDeployParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: change } = useConfigChange({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
   const [containerIdEdit, setContainerIdEdit] = useState<string>(
     template.containerId
@@ -104,36 +110,21 @@ export function AppDeployInner({ session, template }: AppDeployParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
-                xnode.config
-                  .change({
-                    session,
-                    changes: [
-                      {
-                        Set: {
-                          container: containerIdEdit,
-                          settings: {
-                            flake: flakeEdit,
-                            network: networkEdit === "host" ? "" : networkEdit,
-                          },
-                          update_inputs: null,
+                change({
+                  session,
+                  data: [
+                    {
+                      Set: {
+                        container: containerIdEdit,
+                        settings: {
+                          flake: flakeEdit,
+                          network: networkEdit === "host" ? "" : networkEdit,
                         },
+                        update_inputs: null,
                       },
-                    ],
-                  })
-                  .then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: [
-                            "container",
-                            containerIdEdit,
-                            session.baseUrl,
-                          ],
-                        });
-                      },
-                    })
-                  );
+                    },
+                  ],
+                });
               }}
             >
               Apply

@@ -18,8 +18,12 @@ import {
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { useDirectory, useFile } from "@/hooks/useXnode";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import {
+  useFileReadDirectory,
+  useFileReadFile,
+  useFileWriteFile,
+} from "@openmesh-network/xnode-manager-sdk-react";
 import { Folder, FileIcon } from "lucide-react";
 import { useState, useMemo } from "react";
 
@@ -45,20 +49,21 @@ export function AppFileExplorerInner({
   session,
   container,
 }: AppFileExplorerParams) {
+  const { mutate: write_file } = useFileWriteFile();
+
   const [currentDir, setCurrentDir] = useState<string>("/");
-  const { data: currentDirContents, refetch: refetchDirContents } =
-    useDirectory({
-      session,
-      container,
-      path: currentDir,
-    });
+  const { data: currentDirContents } = useFileReadDirectory({
+    session,
+    container,
+    path: currentDir,
+  });
   const segments = useMemo(
     () => (currentDir ? currentDir.split("/").slice(1, -1) : []),
     [currentDir]
   );
 
   const [currentFile, setCurrentFile] = useState<string | undefined>(undefined);
-  const { data: currentFileContents, refetch: refetchFileContents } = useFile({
+  const { data: currentFileContents } = useFileReadFile({
     session,
     container,
     path: currentFile,
@@ -151,16 +156,14 @@ export function AppFileExplorerInner({
               <Button
                 disabled={!fileEdit || fileEdit === currentFileContentsString}
                 onClick={() => {
-                  xnode.file
-                    .write_file({
-                      session,
-                      location: {
-                        container,
-                        path: currentFile,
-                      },
+                  write_file({
+                    session,
+                    path: { container },
+                    data: {
+                      path: currentFile,
                       content: xnode.utils.string_to_bytes(fileEdit),
-                    })
-                    .then(() => refetchFileContents());
+                    },
+                  });
                 }}
               >
                 Save

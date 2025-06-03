@@ -19,12 +19,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useQueryClient } from "@tanstack/react-query";
 import { ReactNode, useEffect, useState } from "react";
 import { useRequestPopup } from "../request-popup";
-import { useContainerConfig } from "@/hooks/useXnode";
 import { NixEditor } from "@/components/ui/nix-editor";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import {
+  useConfigChange,
+  useConfigContainer,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppEditParams {
   session?: xnode.utils.Session;
@@ -45,10 +47,16 @@ export function AppEdit(params: AppEditParams) {
 }
 
 export function AppEditInner({ session, container }: AppEditParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: change } = useConfigChange({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
-  const { data: config } = useContainerConfig({
+  const { data: config } = useConfigContainer({
     session,
     container,
   });
@@ -108,33 +116,21 @@ export function AppEditInner({ session, container }: AppEditParams) {
             <DialogClose asChild>
               <Button
                 onClick={() => {
-                  xnode.config
-                    .change({
-                      session,
-                      changes: [
-                        {
-                          Set: {
-                            container: container,
-                            settings: {
-                              flake: flakeEdit,
-                              network:
-                                networkEdit === "host" ? "" : networkEdit,
-                            },
-                            update_inputs: null,
+                  change({
+                    session,
+                    data: [
+                      {
+                        Set: {
+                          container: container,
+                          settings: {
+                            flake: flakeEdit,
+                            network: networkEdit === "host" ? "" : networkEdit,
                           },
+                          update_inputs: null,
                         },
-                      ],
-                    })
-                    .then((res) =>
-                      setRequestPopup({
-                        ...res,
-                        onFinish: () => {
-                          queryClient.invalidateQueries({
-                            queryKey: ["container", container, session.baseUrl],
-                          });
-                        },
-                      })
-                    );
+                      },
+                    ],
+                  });
                 }}
               >
                 Apply

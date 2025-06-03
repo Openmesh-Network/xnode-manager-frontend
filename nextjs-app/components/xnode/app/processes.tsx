@@ -11,7 +11,6 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useLogs, useProcesses } from "@/hooks/useXnode";
 import {
   CheckCircle,
   X,
@@ -22,9 +21,13 @@ import {
 } from "lucide-react";
 import { useState, useRef, useMemo, useEffect } from "react";
 import { useRequestPopup } from "../request-popup";
-import { useQueryClient } from "@tanstack/react-query";
 import { Input } from "@/components/ui/input";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import {
+  useProcessExecute,
+  useProcessList,
+  useProcessLogs,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppProcessesParams {
   session?: xnode.utils.Session;
@@ -45,10 +48,16 @@ export function AppProcesses(params: AppProcessesParams) {
 }
 
 export function AppProcessesInner({ session, container }: AppProcessesParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: execute } = useProcessExecute({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
-  const { data: processes } = useProcesses({
+  const { data: processes } = useProcessList({
     session,
     container,
   });
@@ -57,7 +66,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
   );
   const [startProcess, setStartProcess] = useState<string>("");
 
-  const { data: currentProcessLogs } = useLogs({
+  const { data: currentProcessLogs } = useProcessLogs({
     session,
     container,
     process: currentProcess,
@@ -126,27 +135,11 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                 <Button
                   className="flex gap-1"
                   onClick={() => {
-                    xnode.process
-                      .execute({
-                        session,
-                        container,
-                        process: startProcess,
-                        command: "Start",
-                      })
-                      .then((res) =>
-                        setRequestPopup({
-                          ...res,
-                          onFinish: () => {
-                            queryClient.invalidateQueries({
-                              queryKey: [
-                                "processes",
-                                container,
-                                session.baseUrl,
-                              ],
-                            });
-                          },
-                        })
-                      );
+                    execute({
+                      session,
+                      path: { container, process: startProcess },
+                      data: "Start",
+                    });
                     setStartProcess("");
                   }}
                 >
@@ -177,27 +170,11 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                       <Button
                         className="flex gap-1"
                         onClick={() => {
-                          xnode.process
-                            .execute({
-                              session,
-                              container,
-                              process: currentProcess,
-                              command: "Stop",
-                            })
-                            .then((res) =>
-                              setRequestPopup({
-                                ...res,
-                                onFinish: () => {
-                                  queryClient.invalidateQueries({
-                                    queryKey: [
-                                      "processes",
-                                      container,
-                                      session.baseUrl,
-                                    ],
-                                  });
-                                },
-                              })
-                            );
+                          execute({
+                            session,
+                            path: { container, process: startProcess },
+                            data: "Stop",
+                          });
                         }}
                       >
                         <Square />
@@ -206,18 +183,11 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                       <Button
                         className="flex gap-1"
                         onClick={() => {
-                          xnode.process
-                            .execute({
-                              session,
-                              container,
-                              process: currentProcess,
-                              command: "Restart",
-                            })
-                            .then((res) =>
-                              setRequestPopup({
-                                ...res,
-                              })
-                            );
+                          execute({
+                            session,
+                            path: { container, process: startProcess },
+                            data: "Restart",
+                          });
                         }}
                       >
                         <RefreshCw />
@@ -228,27 +198,11 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                     <Button
                       className="flex gap-1"
                       onClick={() => {
-                        xnode.process
-                          .execute({
-                            session,
-                            container,
-                            process: currentProcess,
-                            command: "Start",
-                          })
-                          .then((res) =>
-                            setRequestPopup({
-                              ...res,
-                              onFinish: () => {
-                                queryClient.invalidateQueries({
-                                  queryKey: [
-                                    "processes",
-                                    container,
-                                    session.baseUrl,
-                                  ],
-                                });
-                              },
-                            })
-                          );
+                        execute({
+                          session,
+                          path: { container, process: startProcess },
+                          data: "Start",
+                        });
                       }}
                     >
                       <Play />

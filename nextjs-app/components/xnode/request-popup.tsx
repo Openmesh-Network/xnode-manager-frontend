@@ -8,7 +8,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { useCommandInfo, useRequestInfo } from "@/hooks/useXnode";
 import {
   AlertDialog,
   AlertDialogContent,
@@ -28,6 +27,10 @@ import { Button } from "../ui/button";
 import { CheckCircle, Hourglass, X } from "lucide-react";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { Ansi } from "../ui/ansi";
+import {
+  useRequestCommandInfo,
+  useRequestRequestInfo,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface RequestPopup {
   request_id?: number;
@@ -51,7 +54,7 @@ export function RequestPopupProvider({
     undefined
   );
 
-  const { data: requestInfo } = useRequestInfo({
+  const { data: requestInfo } = useRequestRequestInfo({
     session,
     request_id: requestPopup.request_id,
   });
@@ -135,21 +138,11 @@ export function RequestCommand({
   request_id?: number;
   command: string;
 }) {
-  const [updateInfo, setUpdateInfo] = useState<boolean>(true);
-  const { data: commandInfo } = useCommandInfo({
+  const { data: commandInfo } = useRequestCommandInfo({
     session,
     request_id,
     command,
-    queryArgs: {
-      enable: updateInfo,
-    },
   });
-
-  useEffect(() => {
-    if (commandInfo?.result) {
-      setUpdateInfo(false);
-    }
-  }, [commandInfo?.result]);
 
   const errScrollAreaRef = useRef<HTMLDivElement>(null);
   const scrollErrToBottom = useMemo(() => {
@@ -170,7 +163,7 @@ export function RequestCommand({
     commandInfo && (
       <AccordionItem value={command}>
         <AccordionTrigger>
-          <div className="flex gap-2">
+          <div className="flex gap-2 place-content-center">
             {commandInfo.result === "0" ? (
               <CheckCircle className="shrink-0 text-green-600" />
             ) : commandInfo.result === "1" ? (

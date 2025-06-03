@@ -11,10 +11,8 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
-import { useContainers, useOS } from "@/hooks/useXnode";
 import { Input } from "@/components/ui/input";
 import { useUserConfig } from "@/hooks/useUserConfig";
 import { Plus, Trash2 } from "lucide-react";
@@ -33,6 +31,11 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import {
+  useConfigContainers,
+  useOsGet,
+  useOsSet,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface OSExposeParams {
   session?: xnode.utils.Session;
@@ -52,10 +55,16 @@ export function OSExpose(params: OSExposeParams) {
 }
 
 export function OSExposeInner({ session }: OSExposeParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: set } = useOsSet({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
-  const { data: config } = useOS({
+  const { data: config } = useOsGet({
     session,
   });
   const userConfig = useUserConfig({ config: config?.flake });
@@ -188,7 +197,7 @@ export function OSExposeInner({ session }: OSExposeParams) {
     );
   };
 
-  const { data: apps } = useContainers({
+  const { data: apps } = useConfigContainers({
     session,
   });
   const [newDomain, setNewDomain] = useState<string>("");
@@ -396,28 +405,17 @@ export function OSExposeInner({ session }: OSExposeParams) {
                         newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
                     }
                   });
-                  xnode.os
-                    .set({
-                      session,
-                      os: {
-                        flake: config.flake.replace(userConfig, newUserConfig),
-                        xnode_owner: null,
-                        domain: null,
-                        acme_email: null,
-                        user_passwd: null,
-                        update_inputs: null,
-                      },
-                    })
-                    .then((res) =>
-                      setRequestPopup({
-                        ...res,
-                        onFinish: () => {
-                          queryClient.invalidateQueries({
-                            queryKey: ["OS", session.baseUrl],
-                          });
-                        },
-                      })
-                    );
+                  set({
+                    session,
+                    data: {
+                      flake: config.flake.replace(userConfig, newUserConfig),
+                      xnode_owner: null,
+                      domain: null,
+                      acme_email: null,
+                      user_passwd: null,
+                      update_inputs: null,
+                    },
+                  });
                 }}
               >
                 Apply

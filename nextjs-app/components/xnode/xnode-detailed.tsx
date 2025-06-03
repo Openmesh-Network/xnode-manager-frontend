@@ -1,15 +1,7 @@
 "use client";
 
-import { useSetSettings, useSettings } from "../context/settings";
+import { useSettings } from "../context/settings";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
-import { AlertTriangle, Hourglass } from "lucide-react";
-import {
-  useContainers,
-  useCpu,
-  useDisk,
-  useMemory,
-  useSession,
-} from "@/hooks/useXnode";
 import { ReactNode, useEffect, useMemo, useState } from "react";
 import { UsageChart, UsageHistory } from "../charts/usage-chart";
 import { Section, Title } from "../text";
@@ -18,6 +10,13 @@ import { App } from "./app";
 import { AppStore } from "./app/store";
 import { RequestPopupProvider } from "./request-popup";
 import { OS } from "./os";
+import {
+  useAuthSession,
+  useConfigContainers,
+  useUsageCpu,
+  useUsageDisk,
+  useUsageMemory,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export function XnodeDetailed({ domain }: { domain?: string }) {
   const settings = useSettings();
@@ -26,12 +25,20 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
     [settings.xnodes]
   );
 
-  const { data: session } = useSession({ xnode });
-  const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useCpu({ session });
-  const { data: memory, dataUpdatedAt: memoryUpdatedAt } = useMemory({
+  const { data: session } = useAuthSession({
+    baseUrl: xnode
+      ? xnode.insecure
+        ? `/xnode-forward/${xnode.domain}` // HTTP requests require a forward proxy
+        : `https://${xnode.domain}`
+      : undefined,
+    sig: xnode ? settings.wallets[xnode.owner] : "0x",
+  });
+
+  const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useUsageCpu({ session });
+  const { data: memory, dataUpdatedAt: memoryUpdatedAt } = useUsageMemory({
     session,
   });
-  const { data: disk } = useDisk({ session });
+  const { data: disk } = useUsageDisk({ session });
 
   const [cpuHistory, setCpuHistory] = useState<UsageHistory[]>([]);
   useEffect(() => {
@@ -59,7 +66,7 @@ export function XnodeDetailed({ domain }: { domain?: string }) {
     ]);
   }, [memory, memoryUpdatedAt]);
 
-  const { data: apps } = useContainers({
+  const { data: apps } = useConfigContainers({
     session: session,
   });
 

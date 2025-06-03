@@ -13,8 +13,8 @@ import {
 } from "@/components/ui/dialog";
 import { Trash2 } from "lucide-react";
 import { useRequestPopup } from "../request-popup";
-import { useQueryClient } from "@tanstack/react-query";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { useConfigChange } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppDeleteParams {
   session?: xnode.utils.Session;
@@ -37,8 +37,14 @@ export function AppDelete(params: AppDeleteParams) {
 }
 
 export function AppDeleteInner({ session, container }: AppDeleteParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: change } = useConfigChange({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
   return (
     <>
@@ -55,27 +61,16 @@ export function AppDeleteInner({ session, container }: AppDeleteParams) {
             <Button
               variant="destructive"
               onClick={() => {
-                xnode.config
-                  .change({
-                    session,
-                    changes: [
-                      {
-                        Remove: {
-                          container: container,
-                        },
+                change({
+                  session,
+                  data: [
+                    {
+                      Remove: {
+                        container: container,
                       },
-                    ],
-                  })
-                  .then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ["containers", session.baseUrl],
-                        });
-                      },
-                    })
-                  );
+                    },
+                  ],
+                });
               }}
             >
               Delete

@@ -11,7 +11,7 @@ import {
   DialogClose,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -19,8 +19,11 @@ import axios from "axios";
 import { LatestVersionReturn } from "@/app/api/nix/latest-version/route";
 import { Label } from "@/components/ui/label";
 import { CheckCircle, Hourglass, TriangleAlert } from "lucide-react";
-import { useContainerConfig } from "@/hooks/useXnode";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import {
+  useConfigChange,
+  useConfigContainer,
+} from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface NixLock {
   nodes: {
@@ -65,10 +68,16 @@ export function AppUpdate(params: AppUpdateParams) {
 }
 
 function AppUpdateInner({ session, container }: AppUpdateParams) {
-  const queryClient = useQueryClient();
   const setRequestPopup = useRequestPopup();
+  const { mutate: change } = useConfigChange({
+    overrides: {
+      onSuccess({ request_id }) {
+        setRequestPopup({ request_id });
+      },
+    },
+  });
 
-  const { data: config } = useContainerConfig({
+  const { data: config } = useConfigContainer({
     session,
     container,
   });
@@ -139,32 +148,21 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
-                xnode.config
-                  .change({
-                    session,
-                    changes: [
-                      {
-                        Set: {
-                          container: container,
-                          settings: {
-                            flake: config.flake,
-                            network: config.network,
-                          },
-                          update_inputs: updateInputs,
+                change({
+                  session,
+                  data: [
+                    {
+                      Set: {
+                        container: container,
+                        settings: {
+                          flake: config.flake,
+                          network: config.network,
                         },
+                        update_inputs: updateInputs,
                       },
-                    ],
-                  })
-                  .then((res) =>
-                    setRequestPopup({
-                      ...res,
-                      onFinish: () => {
-                        queryClient.invalidateQueries({
-                          queryKey: ["container", container, session.baseUrl],
-                        });
-                      },
-                    })
-                  );
+                    },
+                  ],
+                });
               }}
               disabled={updateInputs.length === 0}
             >
