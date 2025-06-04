@@ -17,20 +17,26 @@ import {
   useUsageDisk,
   useUsageMemory,
 } from "@openmesh-network/xnode-manager-sdk-react";
+import { useRouter } from "next/navigation";
+import { getBaseUrl } from "@/lib/xnode";
 
-export function XnodeDetailed({ domain }: { domain?: string }) {
+export function XnodeDetailed({ id }: { id?: string }) {
   const settings = useSettings();
   const xnode = useMemo(
-    () => settings.xnodes.find((x) => x.domain === domain),
+    () => settings.xnodes.find((x) => x.id === id),
     [settings.xnodes]
   );
 
+  const { replace } = useRouter();
+  useEffect(() => {
+    if (!xnode) {
+      // Xnode not in import list, redirect to home page
+      replace("/");
+    }
+  }, [xnode]);
+
   const { data: session } = useAuthSession({
-    baseUrl: xnode
-      ? xnode.insecure
-        ? `/xnode-forward/${xnode.domain}` // HTTP requests require a forward proxy
-        : `https://${xnode.domain}`
-      : undefined,
+    baseUrl: getBaseUrl({ xnode }),
     sig: xnode ? settings.wallets[xnode.owner] : "0x",
   });
 

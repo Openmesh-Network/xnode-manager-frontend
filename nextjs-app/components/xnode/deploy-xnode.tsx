@@ -65,8 +65,7 @@ export function DeployXnode() {
                 xnodes: [
                   ...settings.xnodes,
                   {
-                    domain: machine.ipAddress,
-                    insecure: true,
+                    insecure: machine.ipAddress,
                     owner: machine.owner,
                     deploymentAuth: machine.deploymentAuth,
                   },

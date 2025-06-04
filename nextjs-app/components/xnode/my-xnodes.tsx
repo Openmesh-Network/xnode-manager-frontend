@@ -18,11 +18,11 @@ export function MyXnodes() {
   }, [address, xnodes]);
 
   return (
-    <div>
+    <div className="@container">
       {myXnodes.length > 0 ? (
-        <div className="grid gap-3 grid-cols-4 max-md:grid-cols-1 max-lg:grid-cols-2 max-xl:grid-cols-3">
+        <div className="grid gap-3 grid-cols-4 @max-lg:grid-cols-1 @max-3xl:grid-cols-2 @max-6xl:grid-cols-3">
           {myXnodes.map((xnode, i) => (
-            <Link key={i} href={`/xnode/${xnode.domain}`}>
+            <Link key={i} href={xnode.id ? `/xnode/${xnode.id}` : "#"}>
               <XnodeSummary xnode={xnode} />
             </Link>
           ))}

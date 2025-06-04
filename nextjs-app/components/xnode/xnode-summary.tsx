@@ -1,7 +1,13 @@
 "use client";
 
 import { useSetSettings, useSettings, Xnode } from "../context/settings";
-import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../ui/card";
 import { AlertTriangle, Trash2 } from "lucide-react";
 import {
   Tooltip,
@@ -10,7 +16,7 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Bar } from "../charts/bar";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Button } from "../ui/button";
 import {
@@ -19,15 +25,38 @@ import {
   useUsageDisk,
   useUsageMemory,
 } from "@openmesh-network/xnode-manager-sdk-react";
+import { getBaseUrl } from "@/lib/xnode";
+import { randomBytes } from "crypto";
+import { AxiosError } from "axios";
 
 export function XnodeSummary({ xnode }: { xnode: Xnode }) {
-  const { wallets } = useSettings();
-  const { data: session } = useAuthSession({
-    baseUrl: xnode.insecure
-      ? `/xnode-forward/${xnode.domain}` // HTTP requests require a forward proxy
-      : `https://${xnode.domain}`,
-    sig: wallets[xnode.owner],
+  const { data: session, error } = useAuthSession({
+    baseUrl: getBaseUrl({ xnode }),
+    sig: xnode.sig,
   });
+
+  const settings = useSettings();
+  const setSettings = useSetSettings();
+  useEffect(() => {
+    if (!xnode.sig || (error instanceof AxiosError && error.status === 400)) {
+      setSettings({
+        ...settings,
+        xnodes: settings.xnodes.map((x) =>
+          x === xnode
+            ? {
+                ...x,
+                id: randomBytes(20)
+                  .toString("base64")
+                  .replace(/\+/g, "-")
+                  .replace(/\//g, "_")
+                  .replace(/=+$/, ""),
+                sig: settings.wallets[xnode.owner],
+              }
+            : x
+        ),
+      });
+    }
+  }, [xnode.sig, error]);
 
   const { data: cpu } = useUsageCpu({ session });
   const { data: memory } = useUsageMemory({ session });
@@ -40,15 +69,12 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
     }, 500);
   }, [connectingDots, setConnectingDots]);
 
-  const settings = useSettings();
-  const setSettings = useSetSettings();
-
   return (
-    <Card className="gap-0">
-      <CardHeader>
+    <Card className="gap-2">
+      <CardHeader className="@container-normal">
         <CardTitle className="text-xl">
           <div className="flex place-items-center">
-            <span>{xnode.domain}</span>
+            <span className="break-all">{xnode.id}</span>
             <div className="grow" />
             <Button
               variant="ghost"
@@ -65,6 +91,7 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
             </Button>
           </div>
         </CardTitle>
+        <CardDescription>{xnode.secure ?? xnode.insecure}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">

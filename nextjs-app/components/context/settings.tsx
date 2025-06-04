@@ -4,9 +4,11 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { Hex } from "viem";
 
 export interface Xnode {
-  domain: string;
   owner: string;
-  insecure: boolean;
+  id?: string;
+  sig?: Hex;
+  secure?: string;
+  insecure?: string;
   deploymentAuth?: string; // For deployments through this portal, store provider + device id for further operations
 }
 

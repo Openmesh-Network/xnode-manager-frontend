@@ -4,7 +4,7 @@ import React from "react";
 export default async function XnodePage({
   params,
 }: {
-  params: Promise<{ domain?: string }>;
+  params: Promise<{ id?: string }>;
 }) {
-  return <XnodeDetailed domain={(await params).domain} />;
+  return <XnodeDetailed id={(await params).id} />;
 }

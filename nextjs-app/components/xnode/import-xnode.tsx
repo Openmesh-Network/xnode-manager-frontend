@@ -1,6 +1,6 @@
 "use client";
 
-import { useSetSettings, useSettings } from "../context/settings";
+import { useSetSettings, useSettings, Xnode } from "../context/settings";
 import { useAddress } from "@/hooks/useAddress";
 import {
   Dialog,
@@ -17,6 +17,7 @@ import { useState } from "react";
 import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { getBaseUrl } from "@/lib/xnode";
 
 export function ImportXnode() {
   const address = useAddress();
@@ -65,16 +66,30 @@ export function ImportXnode() {
                   return;
                 }
 
-                if (settings.xnodes.some((x) => x.domain === domain)) {
+                if (
+                  settings.xnodes.some(
+                    (x) => x.secure === domain || x.insecure === domain
+                  )
+                ) {
                   // Xnode already imported
                   return;
                 }
 
                 // If domain is ip address, use insecure
                 const insecure = /^(\d{1,3}\.){3}\d{1,3}$/.test(domain);
-                const baseUrl = insecure
-                  ? `/xnode-forward/${domain}`
-                  : `https://${domain}`; // HTTP requests require a forward proxy
+                const importedXnode = {
+                  owner: address,
+                  secure: !insecure ? domain : undefined,
+                  insecure: insecure ? domain : undefined,
+                } satisfies Xnode;
+
+                const baseUrl = getBaseUrl({ xnode: importedXnode }); // HTTP requests require a forward proxy
+                if (!baseUrl) {
+                  throw new Error(
+                    `Base url for Xnode ${importedXnode} could not be calculated.`
+                  );
+                }
+
                 xnode.auth
                   .login({ baseUrl, sig: settings.wallets[address] })
                   .then((session) => xnode.auth.scopes({ session }))
@@ -82,14 +97,7 @@ export function ImportXnode() {
                     if (scopes.length > 0) {
                       setSettings({
                         ...settings,
-                        xnodes: [
-                          ...settings.xnodes,
-                          {
-                            domain,
-                            insecure,
-                            owner: address,
-                          },
-                        ],
+                        xnodes: settings.xnodes.concat([importedXnode]),
                       });
                       setDomain("");
                     } else {
