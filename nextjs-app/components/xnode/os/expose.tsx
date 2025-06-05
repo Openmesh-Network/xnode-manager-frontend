@@ -15,7 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
 import { useUserConfig } from "@/hooks/useUserConfig";
-import { Plus, Trash2 } from "lucide-react";
+import { Coffee, Plus, Trash2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -36,6 +36,9 @@ import {
   useOsGet,
   useOsSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { rawListeners } from "process";
+import { Label } from "@/components/ui/label";
 
 export interface OSExposeParams {
   session?: xnode.utils.Session;
@@ -197,6 +200,86 @@ export function OSExposeInner({ session }: OSExposeParams) {
     );
   };
 
+  const authenticated = useMemo(() => {
+    if (!userConfig) {
+      return undefined;
+    }
+
+    const domainRegex = new RegExp(
+      /services.xnode-auth.domains.(.*)=[^}]*{((?:\n|.)*?)};/g
+    );
+    const accessListRegex = new RegExp(
+      /accessList[^=]*=[^\]]*\[((?:\n|.)*?)\];/g
+    );
+    const pathsRegex = new RegExp(/paths[^=]*=[^\]]*\[((?:\n|.)*?)\];/g);
+    const entryRegex = new RegExp(/"(.*?)"/g);
+
+    return userConfig
+      .matchAll(domainRegex)
+      .map((expose) => {
+        const domain = expose.at(1)?.trim() ?? "UNKNOWN";
+        const accessList =
+          expose
+            .at(2)
+            ?.matchAll(accessListRegex)
+            .map(
+              (rule) =>
+                rule
+                  .at(1)
+                  ?.matchAll(entryRegex)
+                  .map((entry) => entry.at(1)?.trim())
+                  .toArray()
+                  .at(0) ?? "UNKNOWN"
+            )
+            .toArray() ?? [];
+        const paths =
+          expose
+            .at(2)
+            ?.matchAll(pathsRegex)
+            .map(
+              (rule) =>
+                rule
+                  .at(1)
+                  ?.matchAll(entryRegex)
+                  .map((entry) => entry.at(1)?.trim())
+                  .toArray()
+                  .at(0) ?? "UNKNOWN"
+            )
+            .toArray() ?? [];
+        return { raw: expose.at(0), domain, accessList, paths };
+      })
+      .toArray();
+  }, [userConfig]);
+
+  const [authenticatedEdit, setAuthenticatedEdit] = useState<
+    typeof authenticated
+  >([]);
+  useEffect(() => {
+    setAuthenticatedEdit(authenticated);
+  }, [authenticated]);
+
+  const editAuthenticated = (
+    domain: string,
+    edit: Partial<NonNullable<typeof authenticatedEdit>[0]>
+  ) => {
+    const existing = authenticatedEdit?.find((a) => a.domain === domain);
+    setAuthenticatedEdit(
+      existing
+        ? authenticatedEdit?.map((a) =>
+            a === existing ? { ...a, ...edit } : a
+          )
+        : authenticatedEdit?.concat([
+            {
+              raw: undefined,
+              domain,
+              accessList: [],
+              paths: [],
+              ...edit,
+            },
+          ])
+    );
+  };
+
   const { data: apps } = useConfigContainers({
     session,
   });
@@ -236,109 +319,381 @@ export function OSExposeInner({ session }: OSExposeParams) {
                     </AccordionTrigger>
                     <AccordionContent>
                       <div className="flex flex-col gap-3 mr-2">
-                        {expose.rules.map((rule, i) => (
-                          <div key={i} className="flex flex-col gap-1 ml-2">
-                            <div className="flex gap-2 place-items-center">
-                              <span className="font-semibold">
-                                Rule #{i + 1}
-                              </span>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => {
-                                  removeRule({ expose, rule });
-                                }}
-                              >
-                                <Trash2 className="text-red-600" />
-                              </Button>
-                            </div>
-                            {rule.map((entry, i) => (
-                              <div
-                                key={i}
-                                className="flex gap-2 ml-2 place-content-between place-items-center"
-                              >
-                                <span>{entry.key}</span>
-                                {entry.key === "forward" ? (
-                                  <ForwardEditor
-                                    value={entry.value}
-                                    onChange={(change) => {
-                                      editEntry(
-                                        { expose, rule, entry },
-                                        { ...entry, value: change }
-                                      );
-                                    }}
-                                    apps={apps}
+                        <div className="flex gap-2">
+                          <Label htmlFor="xnode-auth">Restrict Access</Label>
+                          <Checkbox
+                            id="xnode-auth"
+                            checked={authenticatedEdit?.some(
+                              (a) =>
+                                a.domain === expose.domain && a.paths.length > 0
+                            )}
+                            onCheckedChange={(c) => {
+                              if (c === "indeterminate") {
+                                return;
+                              }
+
+                              if (c) {
+                                editAuthenticated(expose.domain, {
+                                  paths: expose.rules
+                                    .filter((r) =>
+                                      r.some(
+                                        (e) =>
+                                          e.key === "forward" &&
+                                          e.value
+                                            .replace('"', "")
+                                            .startsWith("http")
+                                      )
+                                    )
+                                    .map((r) =>
+                                      (
+                                        r.find((e) => e.key === "path") ?? {
+                                          value: '"/"',
+                                        }
+                                      ).value.replaceAll('"', "")
+                                    )
+                                    .filter((e) => e !== undefined),
+                                });
+                              } else {
+                                editAuthenticated(expose.domain, {
+                                  paths: [],
+                                });
+                              }
+                            }}
+                          />
+                        </div>
+                        {authenticatedEdit?.some(
+                          (a) =>
+                            a.domain === expose.domain && a.paths.length > 0
+                        ) && (
+                          <div className="flex flex-col gap-1">
+                            {authenticatedEdit
+                              ?.find((a) => a.domain === expose.domain)
+                              ?.accessList.map((a, i) => (
+                                <div className="flex gap-1">
+                                  <Input
+                                    key={i}
+                                    value={a}
+                                    onChange={(e) =>
+                                      editAuthenticated(expose.domain, {
+                                        accessList: authenticatedEdit
+                                          ?.find(
+                                            (a) => a.domain === expose.domain
+                                          )
+                                          ?.accessList.map((acc) =>
+                                            acc === a ? e.target.value : acc
+                                          ),
+                                      })
+                                    }
                                   />
-                                ) : (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => {
+                                      editAuthenticated(expose.domain, {
+                                        accessList: authenticatedEdit
+                                          ?.find(
+                                            (a) => a.domain === expose.domain
+                                          )
+                                          ?.accessList.filter(
+                                            (acc) => acc !== a
+                                          ),
+                                      });
+                                    }}
+                                  >
+                                    <Trash2 className="text-red-600" />
+                                  </Button>
+                                </div>
+                              ))}
+                            <Button
+                              className="flex gap-2"
+                              onClick={() => {
+                                editAuthenticated(expose.domain, {
+                                  accessList: authenticatedEdit
+                                    ?.find((a) => a.domain === expose.domain)
+                                    ?.accessList.concat([
+                                      config.xnode_owner ?? "",
+                                    ]),
+                                });
+                              }}
+                            >
+                              <Plus />
+                              <span>Add</span>
+                            </Button>
+                          </div>
+                        )}
+                        <div className="flex flex-col gap-3">
+                          {expose.rules.map((rule, i) => (
+                            <div key={i} className="flex flex-col gap-1 ml-2">
+                              <div className="flex gap-2 place-items-center">
+                                <span className="font-semibold">
+                                  Rule #{i + 1}
+                                </span>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => {
+                                    if (
+                                      authenticatedEdit?.some(
+                                        (a) => a.domain === expose.domain
+                                      ) &&
+                                      rule.some(
+                                        (entry) =>
+                                          entry.key === "forward" &&
+                                          entry.value
+                                            .replace('"', "")
+                                            .startsWith("http")
+                                      )
+                                    ) {
+                                      const path = (
+                                        rule.find(
+                                          (entry) => entry.key === "path"
+                                        ) ?? {
+                                          value: '"/"',
+                                        }
+                                      ).value.replaceAll('"', "");
+                                      editAuthenticated(expose.domain, {
+                                        paths: authenticatedEdit
+                                          ?.find(
+                                            (a) => a.domain === expose.domain
+                                          )
+                                          ?.paths.filter((p) => p !== path),
+                                      });
+                                    }
+                                    removeRule({ expose, rule });
+                                  }}
+                                >
+                                  <Trash2 className="text-red-600" />
+                                </Button>
+                              </div>
+                              {authenticatedEdit?.some(
+                                (a) =>
+                                  a.domain === expose.domain &&
+                                  a.paths.length > 0
+                              ) &&
+                                rule.some(
+                                  (entry) =>
+                                    entry.key === "forward" &&
+                                    entry.value
+                                      .replace('"', "")
+                                      .startsWith("http")
+                                ) && (
                                   <div className="flex gap-2">
-                                    <Input
+                                    <Label
+                                      htmlFor={`xnode-auth-${
+                                        rule.find(
+                                          (entry) => entry.key === "path"
+                                        ) ?? {
+                                          value: '"/"',
+                                        }
+                                      }`}
+                                    >
+                                      Restricted
+                                    </Label>
+                                    <Checkbox
+                                      id={`xnode-auth-${
+                                        rule.find(
+                                          (entry) => entry.key === "path"
+                                        ) ?? {
+                                          value: '"/"',
+                                        }
+                                      }`}
+                                      checked={authenticatedEdit
+                                        .find((a) => a.domain === expose.domain)
+                                        ?.paths.includes(
+                                          (
+                                            rule.find(
+                                              (entry) => entry.key === "path"
+                                            ) ?? {
+                                              value: '"/"',
+                                            }
+                                          ).value.replaceAll('"', "")
+                                        )}
+                                      onCheckedChange={(c) => {
+                                        if (c === "indeterminate") {
+                                          return;
+                                        }
+
+                                        if (
+                                          !authenticatedEdit?.some(
+                                            (a) => a.domain === expose.domain
+                                          )
+                                        ) {
+                                          return;
+                                        }
+
+                                        const path = (
+                                          rule.find(
+                                            (entry) => entry.key === "path"
+                                          ) ?? {
+                                            value: '"/"',
+                                          }
+                                        ).value.replaceAll('"', "");
+                                        if (c) {
+                                          editAuthenticated(expose.domain, {
+                                            paths: authenticatedEdit
+                                              ?.find(
+                                                (a) =>
+                                                  a.domain === expose.domain
+                                              )
+                                              ?.paths.concat([path]),
+                                          });
+                                        } else {
+                                          editAuthenticated(expose.domain, {
+                                            paths: authenticatedEdit
+                                              ?.find(
+                                                (a) =>
+                                                  a.domain === expose.domain
+                                              )
+                                              ?.paths.filter((p) => p !== path),
+                                          });
+                                        }
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                              {rule.map((entry, i) => (
+                                <div
+                                  key={i}
+                                  className="flex gap-2 ml-2 place-content-between place-items-center"
+                                >
+                                  <span>{entry.key}</span>
+                                  {entry.key === "forward" ? (
+                                    <ForwardEditor
                                       value={entry.value}
                                       onChange={(change) => {
                                         editEntry(
                                           { expose, rule, entry },
-                                          {
-                                            ...entry,
-                                            value: `"${change.target.value.replaceAll(
-                                              '"',
-                                              ""
-                                            )}"`,
-                                          }
+                                          { ...entry, value: change }
                                         );
                                       }}
+                                      apps={apps}
                                     />
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => {
-                                        removeEntry({ expose, rule, entry });
-                                      }}
-                                    >
-                                      <Trash2 className="text-red-600" />
-                                    </Button>
-                                  </div>
+                                  ) : (
+                                    <div className="flex gap-2">
+                                      <Input
+                                        value={entry.value}
+                                        onChange={(change) => {
+                                          const newValue = `"${change.target.value.replaceAll(
+                                            '"',
+                                            ""
+                                          )}"`;
+                                          if (
+                                            entry.key === "path" &&
+                                            authenticatedEdit?.some(
+                                              (a) => a.domain === expose.domain
+                                            )
+                                          ) {
+                                            editAuthenticated(expose.domain, {
+                                              paths: authenticatedEdit
+                                                ?.find(
+                                                  (a) =>
+                                                    a.domain === expose.domain
+                                                )
+                                                ?.paths.map((p) =>
+                                                  `"${p}"` === entry.value
+                                                    ? newValue.replaceAll(
+                                                        '"',
+                                                        ""
+                                                      )
+                                                    : p
+                                                ),
+                                            });
+                                          }
+                                          editEntry(
+                                            { expose, rule, entry },
+                                            {
+                                              ...entry,
+                                              value: newValue,
+                                            }
+                                          );
+                                        }}
+                                      />
+                                      <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => {
+                                          if (
+                                            authenticatedEdit?.some(
+                                              (a) => a.domain === expose.domain
+                                            )
+                                          ) {
+                                            const path = (
+                                              rule.find(
+                                                (entry) => entry.key === "path"
+                                              ) ?? {
+                                                value: '"/"',
+                                              }
+                                            ).value.replaceAll('"', "");
+
+                                            if (path !== "/") {
+                                              editAuthenticated(expose.domain, {
+                                                paths: authenticatedEdit
+                                                  ?.find(
+                                                    (a) =>
+                                                      a.domain === expose.domain
+                                                  )
+                                                  ?.paths.map((p) =>
+                                                    p === path ? "/" : p
+                                                  ),
+                                              });
+                                            }
+                                          }
+                                          removeEntry({ expose, rule, entry });
+                                        }}
+                                      >
+                                        <Trash2 className="text-red-600" />
+                                      </Button>
+                                    </div>
+                                  )}
+                                </div>
+                              ))}
+                              {["forward"]
+                                .concat(
+                                  rule
+                                    .find((entry) => entry.key === "forward")
+                                    ?.value.replace('"', "")
+                                    .startsWith("http")
+                                    ? ["path"]
+                                    : []
+                                )
+                                .map(
+                                  (key) =>
+                                    !rule.some(
+                                      (entry) => entry.key === key
+                                    ) && (
+                                      <Button
+                                        key={key}
+                                        className="flex gap-2"
+                                        onClick={() => {
+                                          addEntry(
+                                            { expose, rule },
+                                            {
+                                              key,
+                                              value:
+                                                key === "path" ? '"/"' : "",
+                                            }
+                                          );
+                                        }}
+                                      >
+                                        <Plus />
+                                        <span>Add {key}</span>
+                                      </Button>
+                                    )
                                 )}
-                              </div>
-                            ))}
-                            {["forward"]
-                              .concat(
-                                rule
-                                  .find((entry) => entry.key === "forward")
-                                  ?.value.replace('"', "")
-                                  .startsWith("http")
-                                  ? ["path"]
-                                  : []
-                              )
-                              .map(
-                                (key) =>
-                                  !rule.some((entry) => entry.key === key) && (
-                                    <Button
-                                      key={key}
-                                      className="flex gap-2"
-                                      onClick={() => {
-                                        addEntry(
-                                          { expose, rule },
-                                          { key, value: '""' }
-                                        );
-                                      }}
-                                    >
-                                      <Plus />
-                                      <span>Add {key}</span>
-                                    </Button>
-                                  )
-                              )}
-                          </div>
-                        ))}
-                        <Button
-                          className="flex gap-2 mt-2"
-                          onClick={() => {
-                            addRule({ expose }, [
-                              { key: "forward", value: "" },
-                            ]);
-                          }}
-                        >
-                          <Plus />
-                          <span>Add Rule</span>
-                        </Button>
+                            </div>
+                          ))}
+                          <Button
+                            className="flex gap-2 mt-2"
+                            onClick={() => {
+                              addRule({ expose }, [
+                                { key: "forward", value: "" },
+                              ]);
+                            }}
+                          >
+                            <Plus />
+                            <span>Add Rule</span>
+                          </Button>
+                        </div>
                       </div>
                     </AccordionContent>
                   </AccordionItem>
@@ -368,13 +723,16 @@ export function OSExposeInner({ session }: OSExposeParams) {
           </div>
         </div>
       )}
-      {exposed && (
+      {exposed && authenticated && (
         <DialogFooter>
           <Button
             onClick={() => {
               setExposedEdit(exposed);
+              setAuthenticatedEdit(authenticated);
             }}
-            disabled={exposedEdit === exposed}
+            disabled={
+              exposedEdit === exposed && authenticatedEdit === authenticated
+            }
           >
             Reset
           </Button>
@@ -397,6 +755,25 @@ export function OSExposeInner({ session }: OSExposeParams) {
                     if (expose.raw) {
                       newUserConfig = newUserConfig.replace(
                         expose.raw,
+                        exposeConfig
+                      );
+                    } else {
+                      const close = newUserConfig.lastIndexOf("}");
+                      newUserConfig =
+                        newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
+                    }
+                  });
+                  authenticatedEdit?.forEach((authenticate) => {
+                    const exposeConfig = `services.xnode-auth.domains.${
+                      authenticate.domain
+                    } = { accessList = [ ${authenticate.accessList
+                      .map((a) => `"${a}"`)
+                      .join(" ")} ]; paths = [ ${authenticate.paths
+                      .map((a) => `"${a}"`)
+                      .join(" ")} ]; };`;
+                    if (authenticate.raw) {
+                      newUserConfig = newUserConfig.replace(
+                        authenticate.raw,
                         exposeConfig
                       );
                     } else {
