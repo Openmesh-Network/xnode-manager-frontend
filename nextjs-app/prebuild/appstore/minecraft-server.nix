@@ -5,7 +5,6 @@
   };
 
   outputs = inputs: {
-    nixpkgs.config.allowUnfree = true;
     nixosConfigurations.container = inputs.nixpkgs.lib.nixosSystem {
       specialArgs = {
         inherit inputs;
@@ -23,6 +22,7 @@
           system.stateVersion = "25.11";
           # END USER CONFIG
 
+          nixpkgs.config.allowUnfree = true;
           services.minecraft-server.enable = true;
           services.minecraft-server.eula = true;
           services.minecraft-server.declarative = true;
