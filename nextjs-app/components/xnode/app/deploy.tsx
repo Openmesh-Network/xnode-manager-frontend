@@ -118,7 +118,7 @@ export function AppDeployInner({ session, template }: AppDeployParams) {
                         container: containerIdEdit,
                         settings: {
                           flake: flakeEdit,
-                          network: networkEdit === "host" ? "" : networkEdit,
+                          network: networkEdit === "host" ? null : networkEdit,
                         },
                         update_inputs: null,
                       },

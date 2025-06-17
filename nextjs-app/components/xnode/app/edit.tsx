@@ -124,7 +124,8 @@ export function AppEditInner({ session, container }: AppEditParams) {
                           container: container,
                           settings: {
                             flake: flakeEdit,
-                            network: networkEdit === "host" ? "" : networkEdit,
+                            network:
+                              networkEdit === "host" ? null : networkEdit,
                           },
                           update_inputs: null,
                         },
