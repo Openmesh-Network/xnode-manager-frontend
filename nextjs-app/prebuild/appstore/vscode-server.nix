@@ -13,8 +13,8 @@
         inputs.xnode-manager.nixosModules.container
         {
           # START USER CONFIG
-          # Put /?tkn=MYSUPERSECRETTOKEN in the address bar or replace with `services.openvscode-server.withoutConnectionToken = true;`
-          services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";
+          # Or replace with and `services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";` and put /?tkn=MYSUPERSECRETTOKEN in the address bar
+          services.openvscode-server.withoutConnectionToken = true;
 
           networking.hostName = "vscode-server";
           nixpkgs.hostPlatform = "x86_64-linux";
