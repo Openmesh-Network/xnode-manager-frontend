@@ -36,7 +36,7 @@ export function AppStore(params: AppStoreParams) {
   );
 }
 
-export function AppStoreInner({ session, exclude }: AppStoreParams) {
+function AppStoreInner({ session, exclude }: AppStoreParams) {
   return (
     <>
       <DialogHeader>

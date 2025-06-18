@@ -79,7 +79,9 @@ export function XnodeDetailed({ id }: { id?: string }) {
   return (
     <RequestPopupProvider session={session}>
       <div className="flex flex-col gap-5">
-        <Section title="Monitor Xnode">
+        <Section
+          title={`Monitor Xnode ${xnode?.secure ?? xnode?.insecure ?? id}`}
+        >
           <div className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-md:grid-cols-1">
             {cpuHistory.length > 0 && (
               <UsageChart title="CPU Usage" label="CPU" data={cpuHistory} />

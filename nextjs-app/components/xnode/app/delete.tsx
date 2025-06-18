@@ -36,7 +36,7 @@ export function AppDelete(params: AppDeleteParams) {
   );
 }
 
-export function AppDeleteInner({ session, container }: AppDeleteParams) {
+function AppDeleteInner({ session, container }: AppDeleteParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: change } = useConfigChange({
     overrides: {

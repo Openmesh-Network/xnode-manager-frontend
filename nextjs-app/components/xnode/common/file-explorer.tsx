@@ -27,34 +27,31 @@ import {
 import { Folder, FileIcon } from "lucide-react";
 import { useState, useMemo } from "react";
 
-export interface AppFileExplorerParams {
+export interface FileExplorerParams {
   session?: xnode.utils.Session;
-  container: string;
+  scope: string;
 }
 
-export function AppFileExplorer(params: AppFileExplorerParams) {
+export function FileExplorer(params: FileExplorerParams) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>File Explorer</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-7xl">
-        <AppFileExplorerInner {...params} />
+        <FileExplorerInner {...params} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function AppFileExplorerInner({
-  session,
-  container,
-}: AppFileExplorerParams) {
+export function FileExplorerInner({ session, scope }: FileExplorerParams) {
   const { mutate: write_file } = useFileWriteFile();
 
   const [currentDir, setCurrentDir] = useState<string>("/");
   const { data: currentDirContents } = useFileReadDirectory({
     session,
-    container,
+    scope,
     path: currentDir,
   });
   const segments = useMemo(
@@ -65,7 +62,7 @@ export function AppFileExplorerInner({
   const [currentFile, setCurrentFile] = useState<string | undefined>(undefined);
   const { data: currentFileContents } = useFileReadFile({
     session,
-    container,
+    scope,
     path: currentFile,
   });
   const currentFileContentsString = useMemo(() => {
@@ -80,9 +77,9 @@ export function AppFileExplorerInner({
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{container} file explorer</DialogTitle>
+        <DialogTitle>{scope} file explorer</DialogTitle>
         <DialogDescription>
-          View and edit files contained in the app
+          View and edit files contained in {scope}
         </DialogDescription>
       </DialogHeader>
       <div className="flex flex-col gap-2">
@@ -158,7 +155,7 @@ export function AppFileExplorerInner({
                 onClick={() => {
                   write_file({
                     session,
-                    path: { container },
+                    path: { scope },
                     data: {
                       path: currentFile,
                       content: xnode.utils.string_to_bytes(fileEdit),

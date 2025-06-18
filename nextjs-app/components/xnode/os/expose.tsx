@@ -15,7 +15,7 @@ import { useEffect, useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
 import { useUserConfig } from "@/hooks/useUserConfig";
-import { Coffee, Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Select,
@@ -37,7 +37,6 @@ import {
   useOsSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { rawListeners } from "process";
 import { Label } from "@/components/ui/label";
 
 export interface OSExposeParams {
@@ -57,7 +56,7 @@ export function OSExpose(params: OSExposeParams) {
   );
 }
 
-export function OSExposeInner({ session }: OSExposeParams) {
+function OSExposeInner({ session }: OSExposeParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: set } = useOsSet({
     overrides: {
@@ -369,9 +368,8 @@ export function OSExposeInner({ session }: OSExposeParams) {
                             {authenticatedEdit
                               ?.find((a) => a.domain === expose.domain)
                               ?.accessList.map((a, i) => (
-                                <div className="flex gap-1">
+                                <div key={i} className="flex gap-1">
                                   <Input
-                                    key={i}
                                     value={a}
                                     onChange={(e) =>
                                       editAuthenticated(expose.domain, {

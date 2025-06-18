@@ -3,11 +3,11 @@
 import { Card, CardFooter, CardHeader, CardTitle } from "../../ui/card";
 import { Title } from "../../text";
 import { AppEdit } from "./edit";
-import { AppFileExplorer } from "./file-explorer";
-import { AppProcesses } from "./processes";
 import { AppDelete } from "./delete";
 import { AppUpdate } from "./update";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
+import { Processes } from "../common/processes";
+import { FileExplorer } from "../common/file-explorer";
 
 export function App({
   session,
@@ -25,8 +25,8 @@ export function App({
       </CardHeader>
       <CardFooter>
         <div className="flex gap-2 flex-wrap max-w-80">
-          <AppProcesses session={session} container={container} />
-          <AppFileExplorer session={session} container={container} />
+          <Processes session={session} scope={`container:${container}`} />
+          <FileExplorer session={session} scope={`container:${container}`} />
           <AppEdit session={session} container={container} />
           <AppUpdate session={session} container={container} />
           <AppDelete session={session} container={container} />

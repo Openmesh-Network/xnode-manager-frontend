@@ -29,25 +29,25 @@ import {
   useProcessLogs,
 } from "@openmesh-network/xnode-manager-sdk-react";
 
-export interface AppProcessesParams {
+export interface ProcessesParams {
   session?: xnode.utils.Session;
-  container: string;
+  scope: string;
 }
 
-export function AppProcesses(params: AppProcessesParams) {
+export function Processes(params: ProcessesParams) {
   return (
     <Dialog>
       <DialogTrigger asChild>
         <Button>Processes</Button>
       </DialogTrigger>
       <DialogContent className="flex flex-col sm:max-w-7xl">
-        <AppProcessesInner {...params} />
+        <ProcessesInner {...params} />
       </DialogContent>
     </Dialog>
   );
 }
 
-export function AppProcessesInner({ session, container }: AppProcessesParams) {
+export function ProcessesInner({ session, scope }: ProcessesParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: execute } = useProcessExecute({
     overrides: {
@@ -59,7 +59,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
 
   const { data: processes } = useProcessList({
     session,
-    container,
+    scope,
   });
   const [currentProcess, setCurrentProcess] = useState<string | undefined>(
     undefined
@@ -68,7 +68,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
 
   const { data: currentProcessLogs } = useProcessLogs({
     session,
-    container,
+    scope,
     process: currentProcess,
   });
   const logsScrollAreaRef = useRef<HTMLDivElement>(null);
@@ -89,9 +89,9 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
   return (
     <>
       <DialogHeader>
-        <DialogTitle>{container} processes</DialogTitle>
+        <DialogTitle>{scope} processes</DialogTitle>
         <DialogDescription>
-          Inspect and manage processes running in the app
+          Inspect and manage processes running in {scope}
         </DialogDescription>
       </DialogHeader>
       <div className="flex flex-col gap-2">
@@ -137,7 +137,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                   onClick={() => {
                     execute({
                       session,
-                      path: { container, process: startProcess },
+                      path: { scope, process: startProcess },
                       data: "Start",
                     });
                     setStartProcess("");
@@ -172,7 +172,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                         onClick={() => {
                           execute({
                             session,
-                            path: { container, process: startProcess },
+                            path: { scope, process: currentProcess },
                             data: "Stop",
                           });
                         }}
@@ -185,7 +185,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                         onClick={() => {
                           execute({
                             session,
-                            path: { container, process: startProcess },
+                            path: { scope, process: currentProcess },
                             data: "Restart",
                           });
                         }}
@@ -200,7 +200,7 @@ export function AppProcessesInner({ session, container }: AppProcessesParams) {
                       onClick={() => {
                         execute({
                           session,
-                          path: { container, process: startProcess },
+                          path: { scope, process: currentProcess },
                           data: "Start",
                         });
                       }}

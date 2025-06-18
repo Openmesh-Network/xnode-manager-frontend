@@ -36,7 +36,7 @@ export function OSEdit(params: OSEditParams) {
   );
 }
 
-export function OSEditInner({ session }: OSEditParams) {
+function OSEditInner({ session }: OSEditParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: set } = useOsSet({
     overrides: {

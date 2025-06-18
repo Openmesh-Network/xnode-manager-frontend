@@ -47,7 +47,7 @@ export function AppDeploy(params: AppDeployParams) {
   );
 }
 
-export function AppDeployInner({ session, template }: AppDeployParams) {
+function AppDeployInner({ session, template }: AppDeployParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: change } = useConfigChange({
     overrides: {

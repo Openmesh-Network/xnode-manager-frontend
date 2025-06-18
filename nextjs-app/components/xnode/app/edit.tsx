@@ -46,7 +46,7 @@ export function AppEdit(params: AppEditParams) {
   );
 }
 
-export function AppEditInner({ session, container }: AppEditParams) {
+function AppEditInner({ session, container }: AppEditParams) {
   const setRequestPopup = useRequestPopup();
   const { mutate: change } = useConfigChange({
     overrides: {
