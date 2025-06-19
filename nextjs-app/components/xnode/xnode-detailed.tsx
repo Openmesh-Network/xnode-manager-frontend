@@ -123,10 +123,12 @@ export function XnodeDetailed({ id }: { id?: string }) {
         {apps && (
           <SectionCard title="Apps">
             <AppStore session={session} exclude={apps} />
-            <div className="flex gap-3 flex-wrap">
-              {apps.map((app) => (
-                <App key={app} session={session} container={app} />
-              ))}
+            <div className="@container">
+              <div className="grid gap-3 grid-cols-3 @max-lg:grid-cols-1 @max-3xl:grid-cols-2">
+                {apps.map((app) => (
+                  <App key={app} session={session} container={app} />
+                ))}
+              </div>
             </div>
           </SectionCard>
         )}

@@ -24,7 +24,7 @@ export function App({
         </CardTitle>
       </CardHeader>
       <CardFooter>
-        <div className="flex gap-2 flex-wrap max-w-80">
+        <div className="flex gap-2 flex-wrap">
           <Processes session={session} scope={`container:${container}`} />
           <FileExplorer session={session} scope={`container:${container}`} />
           <AppEdit session={session} container={container} />
