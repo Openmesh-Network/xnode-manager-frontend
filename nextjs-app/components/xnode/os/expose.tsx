@@ -205,12 +205,8 @@ function OSExposeInner({ session }: OSExposeParams) {
     }
 
     const domainRegex = new RegExp(
-      /services.xnode-auth.domains.(.*)=[^}]*{((?:\n|.)*?)};/g
+      /services.xnode-auth.domains.(.*)=[^\w]*{[^\w]*accessList[^\w]*=[^\w]*{((?:\n|.)*?)};[^\w]*paths[^\w]*=[^\w]*\[((?:\n|.)*?)\];[^\w]*};/g
     );
-    const accessListRegex = new RegExp(
-      /accessList[^=]*=[^\]]*\[((?:\n|.)*?)\];/g
-    );
-    const pathsRegex = new RegExp(/paths[^=]*=[^\]]*\[((?:\n|.)*?)\];/g);
     const entryRegex = new RegExp(/"(.*?)"/g);
 
     return userConfig
@@ -219,32 +215,17 @@ function OSExposeInner({ session }: OSExposeParams) {
         const domain = expose.at(1)?.trim() ?? "UNKNOWN";
         const accessList =
           expose
-            .at(2)
-            ?.matchAll(accessListRegex)
-            .map(
-              (rule) =>
-                rule
-                  .at(1)
-                  ?.matchAll(entryRegex)
-                  .map((entry) => entry.at(1)?.trim())
-                  .toArray()
-                  .at(0) ?? "UNKNOWN"
-            )
+            ?.at(2)
+            ?.matchAll(entryRegex)
+            .map((entry) => entry.at(1)?.trim() ?? "UNKNOWN")
             .toArray() ?? [];
         const paths =
           expose
-            .at(2)
-            ?.matchAll(pathsRegex)
-            .map(
-              (rule) =>
-                rule
-                  .at(1)
-                  ?.matchAll(entryRegex)
-                  .map((entry) => entry.at(1)?.trim())
-                  .toArray()
-                  .at(0) ?? "UNKNOWN"
-            )
+            ?.at(3)
+            ?.matchAll(entryRegex)
+            .map((entry) => entry.at(1)?.trim() ?? "UNKNOWN")
             .toArray() ?? [];
+        console.log({ raw: expose.at(0), domain, accessList, paths });
         return { raw: expose.at(0), domain, accessList, paths };
       })
       .toArray();
@@ -764,9 +745,9 @@ function OSExposeInner({ session }: OSExposeParams) {
                   authenticatedEdit?.forEach((authenticate) => {
                     const exposeConfig = `services.xnode-auth.domains.${
                       authenticate.domain
-                    } = { accessList = [ ${authenticate.accessList
-                      .map((a) => `"${a}"`)
-                      .join(" ")} ]; paths = [ ${authenticate.paths
+                    } = { accessList = { ${authenticate.accessList
+                      .map((a) => `"${a}" = { };`)
+                      .join(" ")} }; paths = [ ${authenticate.paths
                       .map((a) => `"${a}"`)
                       .join(" ")} ]; };`;
                     if (authenticate.raw) {
