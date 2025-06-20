@@ -15,8 +15,8 @@ import { useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import {
-  useConfigChange,
   useConfigContainer,
+  useConfigContainerChange,
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { NixLock, Updatable } from "../common/update";
 
@@ -40,7 +40,7 @@ export function AppUpdate(params: AppUpdateParams) {
 
 function AppUpdateInner({ session, container }: AppUpdateParams) {
   const setRequestPopup = useRequestPopup();
-  const { mutate: change } = useConfigChange({
+  const { mutate: change } = useConfigContainerChange({
     overrides: {
       onSuccess({ request_id }) {
         setRequestPopup({ request_id });
@@ -55,7 +55,7 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
 
   const [updateInputs, setUpdateInputs] = useState<string[]>([]);
   const lock = useMemo(() => {
-    if (!config) {
+    if (!config || !config.flake_lock) {
       return undefined;
     }
 
@@ -123,18 +123,14 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
               onClick={() => {
                 change({
                   session,
-                  data: [
-                    {
-                      Set: {
-                        container: container,
-                        settings: {
-                          flake: config.flake,
-                          network: config.network,
-                        },
-                        update_inputs: updateInputs,
-                      },
+                  path: { container },
+                  data: {
+                    settings: {
+                      flake: config.flake,
+                      network: config.network,
                     },
-                  ],
+                    update_inputs: updateInputs,
+                  },
                 });
               }}
               disabled={updateInputs.length === 0}

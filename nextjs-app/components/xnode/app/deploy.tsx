@@ -24,7 +24,7 @@ import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
 import { NixEditor } from "@/components/ui/nix-editor";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
-import { useConfigChange } from "@openmesh-network/xnode-manager-sdk-react";
+import { useConfigContainerChange } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppDeployParams {
   session?: xnode.utils.Session;
@@ -49,7 +49,7 @@ export function AppDeploy(params: AppDeployParams) {
 
 function AppDeployInner({ session, template }: AppDeployParams) {
   const setRequestPopup = useRequestPopup();
-  const { mutate: change } = useConfigChange({
+  const { mutate: change } = useConfigContainerChange({
     overrides: {
       onSuccess({ request_id }) {
         setRequestPopup({ request_id });
@@ -112,18 +112,16 @@ function AppDeployInner({ session, template }: AppDeployParams) {
               onClick={() => {
                 change({
                   session,
-                  data: [
-                    {
-                      Set: {
-                        container: containerIdEdit,
-                        settings: {
-                          flake: flakeEdit,
-                          network: networkEdit === "host" ? null : networkEdit,
-                        },
-                        update_inputs: null,
-                      },
+                  path: {
+                    container: containerIdEdit,
+                  },
+                  data: {
+                    settings: {
+                      flake: flakeEdit,
+                      network: networkEdit === "host" ? null : networkEdit,
                     },
-                  ],
+                    update_inputs: null,
+                  },
                 });
               }}
             >
