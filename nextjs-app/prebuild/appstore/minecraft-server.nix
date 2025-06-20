@@ -12,14 +12,17 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
           # START USER CONFIG
           services.minecraft-server.serverProperties = {
             motd = "Minecraft server running on Xnode!";
           };
-
-          networking.hostName = "minecraft-server";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           nixpkgs.config.allowUnfree = true;
@@ -27,7 +30,7 @@
           services.minecraft-server.eula = true;
           services.minecraft-server.declarative = true;
           services.minecraft-server.openFirewall = true;
-        }
+        })
       ];
     };
   };

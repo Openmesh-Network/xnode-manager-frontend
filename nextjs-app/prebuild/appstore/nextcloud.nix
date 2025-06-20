@@ -11,28 +11,28 @@
       };
       modules = [
         inputs.xnode-manager.nixosModules.container
-        (
-          { pkgs, ... }:
-          {
-            # START USER CONFIG
-            services.nextcloud.hostName = "nextcloud.openmesh.network";
-            services.nextcloud.config.adminpassFile = builtins.toString (
-              pkgs.writeText "nextcloud.password" "xnode"
-            );
+        {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
+          # START USER CONFIG
+          services.nextcloud.hostName = "nextcloud.openmesh.network";
+          services.nextcloud.config.adminpassFile = builtins.toString (
+            args.pkgs.writeText "nextcloud.password" "xnode"
+          );
+          # END USER CONFIG
 
-            networking.hostName = "nextcloud";
-            nixpkgs.hostPlatform = "x86_64-linux";
-            system.stateVersion = "25.11";
-            # END USER CONFIG
+          services.nextcloud.enable = true;
+          services.nextcloud.https = true;
+          services.nextcloud.config.dbtype = "sqlite";
+          services.nextcloud.settings.trusted_proxies = [ "192.168.0.0" ];
 
-            services.nextcloud.enable = true;
-            services.nextcloud.https = true;
-            services.nextcloud.config.dbtype = "sqlite";
-            services.nextcloud.settings.trusted_proxies = [ "192.168.0.0" ];
-
-            networking.firewall.allowedTCPPorts = [ 80 ];
-          }
-        )
+          networking.firewall.allowedTCPPorts = [ 80 ];
+        })
       ];
     };
   };

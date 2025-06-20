@@ -11,38 +11,38 @@
       };
       modules = [
         inputs.xnode-manager.nixosModules.container
-        (
-          { pkgs, ... }:
-          {
-            # START USER CONFIG
-            services.discourse.hostname = "discourse.openmesh.network";
-            services.discourse.admin.email = "xnode@openmesh.network";
-            services.discourse.admin.username = "xnode";
-            services.discourse.admin.fullName = "Openmesh Xnode";
-            services.discourse.admin.passwordFile = builtins.toString (
-              pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
-            );
+        {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
+          # START USER CONFIG
+          services.discourse.hostname = "discourse.openmesh.network";
+          services.discourse.admin.email = "xnode@openmesh.network";
+          services.discourse.admin.username = "xnode";
+          services.discourse.admin.fullName = "Openmesh Xnode";
+          services.discourse.admin.passwordFile = builtins.toString (
+            args.pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
+          );
 
-            services.postfix.relayHost = "smtp.gmail.com";
-            services.postfix.relayPort = 587;
+          services.postfix.relayHost = "smtp.gmail.com";
+          services.postfix.relayPort = 587;
+          # END USER CONFIG
 
-            networking.hostName = "discourse";
-            nixpkgs.hostPlatform = "x86_64-linux";
-            system.stateVersion = "25.11";
-            # END USER CONFIG
+          services.discourse.enable = true;
+          services.discourse.database.ignorePostgresqlVersion = true;
 
-            services.discourse.enable = true;
-            services.discourse.database.ignorePostgresqlVersion = true;
+          security.acme.acceptTerms = true;
+          security.acme.defaults.email = "xnode@self.signed";
+          security.acme.defaults.server = "https://localhost:12345";
 
-            security.acme.acceptTerms = true;
-            security.acme.defaults.email = "xnode@self.signed";
-            security.acme.defaults.server = "https://localhost:12345";
+          services.postfix.enable = true;
 
-            services.postfix.enable = true;
-
-            networking.firewall.allowedTCPPorts = [ 443 ];
-          }
-        )
+          networking.firewall.allowedTCPPorts = [ 443 ];
+        })
       ];
     };
   };

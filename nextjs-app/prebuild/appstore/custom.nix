@@ -12,14 +12,17 @@
       };
       modules = [
         inputs.xnode-manager.nixosModules.container
-        # inputs.near-app.nixosModules.default
         {
-          networking.hostName = "my-app";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
-
-          # services.my-app.enable = true;
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
         }
+        # inputs.near-app.nixosModules.default
+        (args: {
+          # services.my-app.enable = true;
+        })
       ];
     };
   };

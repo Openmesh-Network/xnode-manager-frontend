@@ -12,20 +12,23 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
           # START USER CONFIG
           # Or replace with and `services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";` and put /?tkn=MYSUPERSECRETTOKEN in the address bar
           services.openvscode-server.withoutConnectionToken = true;
-
-          networking.hostName = "vscode-server";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           services.openvscode-server.enable = true;
           services.openvscode-server.host = "0.0.0.0";
 
           networking.firewall.allowedTCPPorts = [ 3000 ];
-        }
+        })
       ];
     };
   };

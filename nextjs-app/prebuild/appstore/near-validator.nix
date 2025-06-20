@@ -21,16 +21,19 @@
       };
       modules = [
         inputs.xnode-manager.nixosModules.container
-        inputs.near-validator.nixosModules.default
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        inputs.near-validator.nixosModules.default
+        (args: {
           # START USER CONFIG
           services.near-validator.pool.id = "openmesh";
           services.near-validator.pool.version = "pool";
           services.near-validator.pinger.enable = false;
-
-          networking.hostName = "near-validator";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           services.near-validator.enable = true;
@@ -39,7 +42,7 @@
             3030
             24567
           ];
-        }
+        })
       ];
     };
   };

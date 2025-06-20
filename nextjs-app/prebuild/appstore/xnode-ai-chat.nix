@@ -14,16 +14,17 @@
       };
       modules = [
         inputs.xnode-manager.nixosModules.container
-        inputs.xnode-ai-chat.nixosModules.default
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        inputs.xnode-ai-chat.nixosModules.default
+        (args: {
           # START USER CONFIG
           services.xnode-ai-chat.defaultModel = "deepseek-r1";
-          services.xnode-ai-chat.admin.email = "xnode@openmesh.network";
-          services.xnode-ai-chat.admin.password = "hunter12";
-
-          networking.hostName = "xnode-ai-chat";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           services.xnode-ai-chat.enable = true;
@@ -31,7 +32,7 @@
           networking.firewall.allowedTCPPorts = [
             8080
           ];
-        }
+        })
       ];
     };
   };

@@ -12,15 +12,19 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
           # START USER CONFIG
-          networking.hostName = "jellyfin";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           services.jellyfin.enable = true;
           services.jellyfin.openFirewall = true;
-        }
+        })
       ];
     };
   };

@@ -12,16 +12,20 @@
       modules = [
         inputs.xnode-manager.nixosModules.container
         {
+          services.xnode-container.xnode-config = {
+            host-platform = ./xnode-config/host-platform;
+            state-version = ./xnode-config/state-version;
+            hostname = ./xnode-config/hostname;
+          };
+        }
+        (args: {
           # START USER CONFIG
-          networking.hostName = "immich";
-          nixpkgs.hostPlatform = "x86_64-linux";
-          system.stateVersion = "25.11";
           # END USER CONFIG
 
           services.immich.enable = true;
           services.immich.host = "0.0.0.0";
           services.immich.openFirewall = true;
-        }
+        })
       ];
     };
   };
