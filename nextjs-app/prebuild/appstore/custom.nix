@@ -20,9 +20,12 @@
           };
         }
         # inputs.near-app.nixosModules.default
-        (args: {
-          # services.my-app.enable = true;
-        })
+        (
+          { pkgs, ... }@args:
+          {
+            # services.my-app.enable = true;
+          }
+        )
       ];
     };
   };

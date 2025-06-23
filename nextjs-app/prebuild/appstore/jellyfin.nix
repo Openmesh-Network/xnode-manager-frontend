@@ -18,14 +18,17 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        (args: {
-          # START USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
 
-          # END USER CONFIG
+            # END USER CONFIG
 
-          services.jellyfin.enable = true;
-          services.jellyfin.openFirewall = true;
-        })
+            services.jellyfin.enable = true;
+            services.jellyfin.openFirewall = true;
+          }
+        )
       ];
     };
   };

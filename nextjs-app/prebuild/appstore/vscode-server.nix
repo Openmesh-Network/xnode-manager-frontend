@@ -18,17 +18,20 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        (args: {
-          # START USER CONFIG
-          # Or replace with and `services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";` and put /?tkn=MYSUPERSECRETTOKEN in the address bar
-          services.openvscode-server.withoutConnectionToken = true;
-          # END USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            # Or replace with and `services.openvscode-server.connectionToken = "MYSUPERSECRETTOKEN";` and put /?tkn=MYSUPERSECRETTOKEN in the address bar
+            services.openvscode-server.withoutConnectionToken = true;
+            # END USER CONFIG
 
-          services.openvscode-server.enable = true;
-          services.openvscode-server.host = "0.0.0.0";
+            services.openvscode-server.enable = true;
+            services.openvscode-server.host = "0.0.0.0";
 
-          networking.firewall.allowedTCPPorts = [ 3000 ];
-        })
+            networking.firewall.allowedTCPPorts = [ 3000 ];
+          }
+        )
       ];
     };
   };

@@ -18,15 +18,18 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        (args: {
-          # START USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
 
-          # END USER CONFIG
+            # END USER CONFIG
 
-          services.immich.enable = true;
-          services.immich.host = "0.0.0.0";
-          services.immich.openFirewall = true;
-        })
+            services.immich.enable = true;
+            services.immich.host = "0.0.0.0";
+            services.immich.openFirewall = true;
+          }
+        )
       ];
     };
   };

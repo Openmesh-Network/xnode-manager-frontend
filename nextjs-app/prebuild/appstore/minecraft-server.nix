@@ -18,19 +18,22 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        (args: {
-          # START USER CONFIG
-          services.minecraft-server.serverProperties = {
-            motd = "Minecraft server running on Xnode!";
-          };
-          # END USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            services.minecraft-server.serverProperties = {
+              motd = "Minecraft server running on Xnode!";
+            };
+            # END USER CONFIG
 
-          nixpkgs.config.allowUnfree = true;
-          services.minecraft-server.enable = true;
-          services.minecraft-server.eula = true;
-          services.minecraft-server.declarative = true;
-          services.minecraft-server.openFirewall = true;
-        })
+            nixpkgs.config.allowUnfree = true;
+            services.minecraft-server.enable = true;
+            services.minecraft-server.eula = true;
+            services.minecraft-server.declarative = true;
+            services.minecraft-server.openFirewall = true;
+          }
+        )
       ];
     };
   };

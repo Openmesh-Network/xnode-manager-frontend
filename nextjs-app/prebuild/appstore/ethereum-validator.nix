@@ -29,21 +29,24 @@
           };
         }
         inputs.ethereum-validator.nixosModules.default
-        (args: {
-          # START USER CONFIG
-          services.ethereum-validator.network = "mainnet";
-          services.ethereum-validator.executionClient.implementation = "geth";
-          services.ethereum-validator.consensusClient.implementation = "lighthouse";
-          services.ethereum-validator.consensusClient.settings.args.checkpoint-sync-url =
-            "https://sync-mainnet.beaconcha.in";
-          services.ethereum-validator.validatorClient.implementation = "lighthouse";
-          services.ethereum-validator.mevBoost.settings.args.relays = [
-            "https://0xac6e77dfe25ecd6110b8e780608cce0dab71fdd5ebea22a16c0205200f2f8e2e3ad3b71d3499c54ad14d6c21b41a37ae@boost-relay.flashbots.net"
-          ];
-          # END USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            services.ethereum-validator.network = "mainnet";
+            services.ethereum-validator.executionClient.implementation = "geth";
+            services.ethereum-validator.consensusClient.implementation = "lighthouse";
+            services.ethereum-validator.consensusClient.settings.args.checkpoint-sync-url =
+              "https://sync-mainnet.beaconcha.in";
+            services.ethereum-validator.validatorClient.implementation = "lighthouse";
+            services.ethereum-validator.mevBoost.settings.args.relays = [
+              "https://0xac6e77dfe25ecd6110b8e780608cce0dab71fdd5ebea22a16c0205200f2f8e2e3ad3b71d3499c54ad14d6c21b41a37ae@boost-relay.flashbots.net"
+            ];
+            # END USER CONFIG
 
-          services.ethereum-validator.enable = true;
-        })
+            services.ethereum-validator.enable = true;
+          }
+        )
       ];
     };
   };

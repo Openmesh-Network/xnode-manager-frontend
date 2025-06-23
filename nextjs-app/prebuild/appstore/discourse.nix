@@ -18,31 +18,36 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        (args: {
-          # START USER CONFIG
-          services.discourse.hostname = "discourse.openmesh.network";
-          services.discourse.admin.email = "xnode@openmesh.network";
-          services.discourse.admin.username = "xnode";
-          services.discourse.admin.fullName = "Openmesh Xnode";
-          services.discourse.admin.passwordFile = builtins.toString (
-            args.pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
-          );
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            services.discourse.hostname = "discourse.openmesh.network";
+            services.discourse.admin.email = "xnode@openmesh.network";
+            services.discourse.admin.username = "xnode";
+            services.discourse.admin.fullName = "Openmesh Xnode";
+            services.discourse.admin.passwordFile = builtins.toString (
+              args.pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
+            );
 
-          services.postfix.relayHost = "smtp.gmail.com";
-          services.postfix.relayPort = 587;
-          # END USER CONFIG
+            services.discourse.mail.notificationEmailAddress = "discourse@openmesh.network";
+            services.postfix.relayHost = "smtp-relay.gmail.com"; # https://support.google.com/a/answer/2956491?hl=en (with IP address authentication)
+            # END USER CONFIG
 
-          services.discourse.enable = true;
-          services.discourse.database.ignorePostgresqlVersion = true;
+            services.discourse.enable = true;
+            services.discourse.database.ignorePostgresqlVersion = true;
 
-          security.acme.acceptTerms = true;
-          security.acme.defaults.email = "xnode@self.signed";
-          security.acme.defaults.server = "https://localhost:12345";
+            security.acme.acceptTerms = true;
+            security.acme.defaults.email = "xnode@self.signed";
+            security.acme.defaults.server = "https://localhost:12345";
+            systemd.services."acme-${args.config.services.discourse.hostname}".enable = false;
 
-          services.postfix.enable = true;
+            services.postfix.enable = true;
+            services.postfix.relayPort = 587;
 
-          networking.firewall.allowedTCPPorts = [ 443 ];
-        })
+            networking.firewall.allowedTCPPorts = [ 443 ];
+          }
+        )
       ];
     };
   };

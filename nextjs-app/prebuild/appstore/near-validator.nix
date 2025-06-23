@@ -29,20 +29,23 @@
           };
         }
         inputs.near-validator.nixosModules.default
-        (args: {
-          # START USER CONFIG
-          services.near-validator.pool.id = "openmesh";
-          services.near-validator.pool.version = "pool";
-          services.near-validator.pinger.enable = false;
-          # END USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            services.near-validator.pool.id = "openmesh";
+            services.near-validator.pool.version = "pool";
+            services.near-validator.pinger.enable = false;
+            # END USER CONFIG
 
-          services.near-validator.enable = true;
+            services.near-validator.enable = true;
 
-          networking.firewall.allowedTCPPorts = [
-            3030
-            24567
-          ];
-        })
+            networking.firewall.allowedTCPPorts = [
+              3030
+              24567
+            ];
+          }
+        )
       ];
     };
   };

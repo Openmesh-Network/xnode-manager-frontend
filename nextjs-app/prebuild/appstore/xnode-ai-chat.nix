@@ -1,13 +1,20 @@
 {
-  # BROKEN
   inputs = {
     xnode-manager.url = "github:Openmesh-Network/xnode-manager";
     xnode-ai-chat.url = "github:OpenxAI-Network/xnode-ai-chat";
     nixpkgs.follows = "xnode-ai-chat/nixpkgs";
   };
 
+  nixConfig = {
+    extra-substituters = [
+      "https://openxai.cachix.org"
+    ];
+    extra-trusted-public-keys = [
+      "openxai.cachix.org-1:3evd2khRVc/2NiGwVmypAF4VAklFmOpMuNs1K28bMQE="
+    ];
+  };
+
   outputs = inputs: {
-    nixpkgs.config.allowUnfree = true;
     nixosConfigurations.container = inputs.nixpkgs.lib.nixosSystem {
       specialArgs = {
         inherit inputs;
@@ -22,17 +29,20 @@
           };
         }
         inputs.xnode-ai-chat.nixosModules.default
-        (args: {
-          # START USER CONFIG
-          services.xnode-ai-chat.defaultModel = "deepseek-r1";
-          # END USER CONFIG
+        (
+          { pkgs, ... }@args:
+          {
+            # START USER CONFIG
+            services.xnode-ai-chat.defaultModel = "deepseek-r1";
+            # END USER CONFIG
 
-          services.xnode-ai-chat.enable = true;
+            services.xnode-ai-chat.enable = true;
 
-          networking.firewall.allowedTCPPorts = [
-            8080
-          ];
-        })
+            networking.firewall.allowedTCPPorts = [
+              8080
+            ];
+          }
+        )
       ];
     };
   };
