@@ -58,9 +58,18 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
     }
   }, [xnode.sig, error]);
 
-  const { data: cpu } = useUsageCpu({ session });
-  const { data: memory } = useUsageMemory({ session });
-  const { data: disk } = useUsageDisk({ session });
+  const { data: cpu } = useUsageCpu({
+    session,
+    overrides: { refetchInterval: 10_000 },
+  });
+  const { data: memory } = useUsageMemory({
+    session,
+    overrides: { refetchInterval: 10_000 },
+  });
+  const { data: disk } = useUsageDisk({
+    session,
+    overrides: { refetchInterval: 10_000 },
+  });
 
   const [connectingDots, setConnectingDots] = useState(1);
   useEffect(() => {
