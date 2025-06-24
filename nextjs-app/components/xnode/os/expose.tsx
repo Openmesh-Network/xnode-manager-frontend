@@ -225,7 +225,6 @@ function OSExposeInner({ session }: OSExposeParams) {
             ?.matchAll(entryRegex)
             .map((entry) => entry.at(1)?.trim() ?? "UNKNOWN")
             .toArray() ?? [];
-        console.log({ raw: expose.at(0), domain, accessList, paths });
         return { raw: expose.at(0), domain, accessList, paths };
       })
       .toArray();
@@ -720,6 +719,7 @@ function OSExposeInner({ session }: OSExposeParams) {
               <Button
                 onClick={() => {
                   let newUserConfig = userConfig;
+
                   exposedEdit?.forEach((expose) => {
                     const exposeConfig = `services.xnode-reverse-proxy.rules.${
                       expose.domain
@@ -742,6 +742,17 @@ function OSExposeInner({ session }: OSExposeParams) {
                         newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
                     }
                   });
+                  exposed.forEach((expose) => {
+                    if (
+                      !exposedEdit
+                        ?.map((e) => e.domain)
+                        .includes(expose.domain) &&
+                      expose.raw
+                    ) {
+                      newUserConfig = newUserConfig.replace(expose.raw, "");
+                    }
+                  });
+
                   authenticatedEdit?.forEach((authenticate) => {
                     const exposeConfig = `services.xnode-auth.domains.${
                       authenticate.domain
@@ -761,6 +772,23 @@ function OSExposeInner({ session }: OSExposeParams) {
                         newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
                     }
                   });
+                  authenticated.forEach((authenticate) => {
+                    if (
+                      (!exposedEdit
+                        ?.map((e) => e.domain)
+                        .includes(authenticate.domain) ||
+                        !authenticatedEdit
+                          ?.map((a) => a.domain)
+                          .includes(authenticate.domain)) &&
+                      authenticate.raw
+                    ) {
+                      newUserConfig = newUserConfig.replace(
+                        authenticate.raw,
+                        ""
+                      );
+                    }
+                  });
+
                   set({
                     session,
                     data: {

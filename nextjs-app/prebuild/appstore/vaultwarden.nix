@@ -22,12 +22,15 @@
           { pkgs, ... }@args:
           {
             # START USER CONFIG
-            # empty
+            services.vaultwarden.config.DOMAIN = "https://vaultwarden.openmesh.network";
+            services.vaultwarden.config.SIGNUPS_ALLOWED = true;
             # END USER CONFIG
 
-            services.immich.enable = true;
-            services.immich.host = "0.0.0.0";
-            services.immich.openFirewall = true;
+            services.vaultwarden.enable = true;
+            services.vaultwarden.config.ROCKET_ADDRESS = "0.0.0.0";
+            services.vaultwarden.config.ROCKET_PORT = 8000;
+
+            networking.firewall.allowedTCPPorts = [ args.config.services.vaultwarden.config.ROCKET_PORT ];
           }
         )
       ];

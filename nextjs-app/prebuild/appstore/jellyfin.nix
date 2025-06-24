@@ -22,7 +22,7 @@
           { pkgs, ... }@args:
           {
             # START USER CONFIG
-
+            # empty
             # END USER CONFIG
 
             services.jellyfin.enable = true;
