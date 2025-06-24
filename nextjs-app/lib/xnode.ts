@@ -7,5 +7,5 @@ export function getBaseUrl({ xnode }: { xnode?: Xnode }): string | undefined {
 
   return xnode.secure
     ? `https://${xnode.secure}`
-    : `/xnode-forward/${xnode.insecure}`; // HTTP requests require a forward proxy
+    : `/api/xnode-forward/${xnode.insecure}`; // No domain requests require a forward proxy
 }

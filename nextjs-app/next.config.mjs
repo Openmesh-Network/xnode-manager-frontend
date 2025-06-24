@@ -2,13 +2,6 @@
 const nextConfig = {
   output: "standalone",
   reactStrictMode: true,
-  rewrites: () => [
-    {
-      // HTTP requests require a forward proxy
-      source: "/xnode-forward/:ip/:call*",
-      destination: "http://:ip/:call*",
-    },
-  ],
   webpack: config => {
     // For reown appkit 
     config.externals.push('pino-pretty', 'lokijs', 'encoding')

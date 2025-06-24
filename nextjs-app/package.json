@@ -50,6 +50,7 @@
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "^4.1.10",
     "tw-animate-css": "^1.3.4",
+    "undici": "^7.10.0",
     "valtio": "^2.1.5",
     "vaul": "^1.1.2",
     "viem": "^2.31.4",
