@@ -2,11 +2,11 @@
 
 import { createContext, useContext, useEffect, useState } from "react";
 import { Hex } from "viem";
+import { xnode } from "@openmesh-network/xnode-manager-sdk";
 
 export interface Xnode {
   owner: string;
-  id?: string;
-  sig?: Hex;
+  loginArgs: Omit<xnode.auth.login_input, "baseUrl">;
   secure?: string;
   insecure?: string;
   deploymentAuth?: string; // For deployments through this portal, store provider + device id for further operations

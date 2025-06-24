@@ -6,6 +6,7 @@ import { useAddress } from "@/hooks/useAddress";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { XnodeSummary } from "./xnode-summary";
 import Link from "next/link";
+import { getBaseUrl } from "@/lib/xnode";
 
 export function MyXnodes() {
   const address = useAddress();
@@ -22,7 +23,7 @@ export function MyXnodes() {
       {myXnodes.length > 0 ? (
         <div className="grid gap-3 grid-cols-4 @max-lg:grid-cols-1 @max-3xl:grid-cols-2 @max-6xl:grid-cols-3">
           {myXnodes.map((xnode, i) => (
-            <Link key={i} href={xnode.id ? `/xnode/${xnode.id}` : "#"}>
+            <Link key={i} href={`/xnode?baseUrl=${getBaseUrl({ xnode })}`}>
               <XnodeSummary xnode={xnode} />
             </Link>
           ))}

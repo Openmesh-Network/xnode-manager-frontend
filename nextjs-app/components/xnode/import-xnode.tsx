@@ -18,6 +18,7 @@ import { Input } from "../ui/input";
 import { Label } from "../ui/label";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { getBaseUrl } from "@/lib/xnode";
+import { useSignMessage } from "wagmi";
 
 export function ImportXnode() {
   const address = useAddress();
@@ -25,6 +26,7 @@ export function ImportXnode() {
   const setSettings = useSetSettings();
 
   const [domain, setDomain] = useState<string>("");
+  const { signMessageAsync } = useSignMessage();
 
   return (
     <Dialog>
@@ -77,35 +79,40 @@ export function ImportXnode() {
 
                 // If domain is ip address, use insecure
                 const insecure = /^(\d{1,3}\.){3}\d{1,3}$/.test(domain);
-                const importedXnode = {
-                  owner: address,
-                  secure: !insecure ? domain : undefined,
-                  insecure: insecure ? domain : undefined,
-                } satisfies Xnode;
+                const messageDomain = insecure ? "manager.xnode.local" : domain;
+                const messageTimestamp = Math.round(Date.now() / 1000);
 
-                const baseUrl = getBaseUrl({ xnode: importedXnode }); // HTTP requests require a forward proxy
-                if (!baseUrl) {
-                  throw new Error(
-                    `Base url for Xnode ${importedXnode} could not be calculated.`
-                  );
-                }
+                signMessageAsync({
+                  message: `Xnode Auth authenticate ${messageDomain} at ${messageTimestamp}`,
+                }).then(async (signature) => {
+                  const importedXnode = {
+                    owner: address,
+                    secure: !insecure ? domain : undefined,
+                    insecure: insecure ? domain : undefined,
+                    loginArgs: {
+                      user: address,
+                      signature,
+                      timestamp: messageTimestamp.toString(),
+                    },
+                  } as Xnode;
 
-                xnode.auth
-                  .login({ baseUrl, sig: settings.wallets[address] })
-                  .then((session) => xnode.auth.scopes({ session }))
-                  .then((scopes) => {
-                    if (scopes.length > 0) {
+                  const baseUrl = getBaseUrl({ xnode: importedXnode });
+                  if (!baseUrl) {
+                    throw new Error(
+                      `Base url for Xnode ${importedXnode} could not be calculated.`
+                    );
+                  }
+
+                  xnode.auth
+                    .login({ baseUrl, ...importedXnode.loginArgs })
+                    .then(() => {
                       setSettings({
                         ...settings,
                         xnodes: settings.xnodes.concat([importedXnode]),
                       });
                       setDomain("");
-                    } else {
-                      console.error(
-                        `${address} does not have any permissions on Xnode ${domain}`
-                      );
-                    }
-                  });
+                    });
+                });
               }}
             >
               Import

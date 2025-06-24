@@ -11,33 +11,36 @@ import { AppStore } from "./app/store";
 import { RequestPopupProvider } from "./request-popup";
 import { OS } from "./os";
 import {
-  useAuthSession,
+  useAuthLogin,
   useConfigContainers,
   useUsageCpu,
   useUsageDisk,
   useUsageMemory,
 } from "@openmesh-network/xnode-manager-sdk-react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { getBaseUrl } from "@/lib/xnode";
 
-export function XnodeDetailed({ id }: { id?: string }) {
+export function XnodeDetailed() {
+  const searchParams = useSearchParams();
+  const baseUrl = useMemo(() => searchParams.get("baseUrl"), [searchParams]);
+
   const settings = useSettings();
   const xnode = useMemo(
-    () => settings.xnodes.find((x) => x.id === id),
-    [settings.xnodes]
+    () => settings.xnodes.find((x) => getBaseUrl({ xnode: x }) === baseUrl),
+    [settings.xnodes, baseUrl]
   );
 
   const { replace } = useRouter();
   useEffect(() => {
-    if (!xnode) {
+    if (settings && !xnode) {
       // Xnode not in import list, redirect to home page
       replace("/");
     }
-  }, [xnode]);
+  }, [settings, xnode]);
 
-  const { data: session } = useAuthSession({
+  const { data: session } = useAuthLogin({
     baseUrl: getBaseUrl({ xnode }),
-    sig: xnode ? settings.wallets[xnode.owner] : "0x",
+    ...xnode?.loginArgs,
   });
 
   const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useUsageCpu({ session });
@@ -79,9 +82,7 @@ export function XnodeDetailed({ id }: { id?: string }) {
   return (
     <RequestPopupProvider session={session}>
       <div className="flex flex-col gap-5">
-        <Section
-          title={`Monitor Xnode ${xnode?.secure ?? xnode?.insecure ?? id}`}
-        >
+        <Section title={`Monitor Xnode ${xnode?.secure ?? xnode?.insecure}`}>
           <div className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-md:grid-cols-1">
             {cpuHistory.length > 0 && (
               <UsageChart title="CPU Usage" label="CPU" data={cpuHistory} />

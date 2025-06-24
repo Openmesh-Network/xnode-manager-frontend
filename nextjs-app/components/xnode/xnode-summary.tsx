@@ -16,47 +16,25 @@ import {
   TooltipTrigger,
 } from "../ui/tooltip";
 import { Bar } from "../charts/bar";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
 import { Button } from "../ui/button";
 import {
-  useAuthSession,
+  useAuthLogin,
   useUsageCpu,
   useUsageDisk,
   useUsageMemory,
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { getBaseUrl } from "@/lib/xnode";
-import { randomBytes } from "crypto";
-import { AxiosError } from "axios";
 
 export function XnodeSummary({ xnode }: { xnode: Xnode }) {
-  const { data: session, error } = useAuthSession({
+  const { data: session } = useAuthLogin({
     baseUrl: getBaseUrl({ xnode }),
-    sig: xnode.sig,
+    ...xnode.loginArgs,
   });
 
   const settings = useSettings();
   const setSettings = useSetSettings();
-  useEffect(() => {
-    if (!xnode.sig || (error instanceof AxiosError && error.status === 400)) {
-      setSettings({
-        ...settings,
-        xnodes: settings.xnodes.map((x) =>
-          x === xnode
-            ? {
-                ...x,
-                id: randomBytes(20)
-                  .toString("base64")
-                  .replace(/\+/g, "-")
-                  .replace(/\//g, "_")
-                  .replace(/=+$/, ""),
-                sig: settings.wallets[xnode.owner],
-              }
-            : x
-        ),
-      });
-    }
-  }, [xnode.sig, error]);
 
   const { data: cpu } = useUsageCpu({
     session,
@@ -83,7 +61,7 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
       <CardHeader className="@container-normal">
         <CardTitle className="text-xl">
           <div className="flex place-items-center">
-            <span className="break-all">{xnode.id}</span>
+            <span className="break-all">{xnode.secure ?? xnode.insecure}</span>
             <div className="grow" />
             <Button
               variant="ghost"
@@ -100,7 +78,6 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
             </Button>
           </div>
         </CardTitle>
-        <CardDescription>{xnode.secure ?? xnode.insecure}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex flex-col gap-3">

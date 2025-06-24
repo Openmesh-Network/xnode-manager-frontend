@@ -6,7 +6,7 @@ const nextConfig = {
     {
       // HTTP requests require a forward proxy
       source: "/xnode-forward/:ip/:call*",
-      destination: "http://:ip:34391/:call*",
+      destination: "http://:ip/:call*",
     },
   ],
   webpack: config => {

@@ -15,7 +15,8 @@ import { Separator } from "../ui/separator";
 import { HardwareProduct } from "@/lib/hardware";
 import { useState } from "react";
 import HardwareDeployer from "../deployment/hardware-deployer";
-import { useSetSettings, useSettings } from "../context/settings";
+import { useSetSettings, useSettings, Xnode } from "../context/settings";
+import { useSignMessage } from "wagmi";
 
 export function DeployXnode() {
   const address = useAddress();
@@ -26,6 +27,7 @@ export function DeployXnode() {
 
   const settings = useSettings();
   const setSettings = useSetSettings();
+  const { signMessageAsync } = useSignMessage();
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
@@ -60,19 +62,31 @@ export function DeployXnode() {
           <HardwareDeployer
             hardware={step.hardware}
             onDeployed={(machine) => {
-              setSettings({
-                ...settings,
-                xnodes: [
-                  ...settings.xnodes,
-                  {
-                    insecure: machine.ipAddress,
-                    owner: machine.owner,
-                    deploymentAuth: machine.deploymentAuth,
-                  },
-                ],
+              const messageDomain = "manager.xnode.local";
+              const messageTimestamp = Math.round(Date.now() / 1000);
+
+              signMessageAsync({
+                message: `Xnode Auth authenticate ${messageDomain} at ${messageTimestamp}`,
+              }).then(async (signature) => {
+                setSettings({
+                  ...settings,
+                  xnodes: [
+                    ...settings.xnodes,
+                    {
+                      insecure: machine.ipAddress,
+                      owner: machine.owner,
+                      deploymentAuth: machine.deploymentAuth,
+                      loginArgs: {
+                        user: machine.owner,
+                        signature,
+                        timestamp: messageTimestamp.toString(),
+                      },
+                    } as Xnode,
+                  ],
+                });
+                setStep({ type: "select" });
+                setOpen(false);
               });
-              setStep({ type: "select" });
-              setOpen(false);
             }}
             onCancel={() => setStep({ type: "select" })}
           />
