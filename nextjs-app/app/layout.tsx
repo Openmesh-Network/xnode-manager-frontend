@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 import { Header } from "@/components/header";
 import { headers } from "next/headers";
 import { ContextProvider } from "@/components/context-provider";
-import { LoginXnode } from "@/components/xnode/login";
 
 const inter = localFont({
   src: "./InterVariable.ttf",
@@ -49,7 +48,6 @@ export default async function RootLayout({ children }: RootLayoutProps) {
           <Header />
           <ContextProvider cookies={cookies}>
             <div className="m-2">{children}</div>
-            <LoginXnode />
           </ContextProvider>
         </body>
       </html>
