@@ -38,14 +38,17 @@ export function XnodeSummary({ xnode }: { xnode: Xnode }) {
 
   const { data: cpu } = useUsageCpu({
     session,
+    scope: "host",
     overrides: { refetchInterval: 10_000 },
   });
   const { data: memory } = useUsageMemory({
     session,
+    scope: "host",
     overrides: { refetchInterval: 10_000 },
   });
   const { data: disk } = useUsageDisk({
     session,
+    scope: "host",
     overrides: { refetchInterval: 10_000 },
   });
 

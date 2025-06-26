@@ -43,11 +43,15 @@ export function XnodeDetailed() {
     ...xnode?.loginArgs,
   });
 
-  const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useUsageCpu({ session });
+  const { data: cpu, dataUpdatedAt: cpuUpdatedAt } = useUsageCpu({
+    session,
+    scope: "host",
+  });
   const { data: memory, dataUpdatedAt: memoryUpdatedAt } = useUsageMemory({
     session,
+    scope: "host",
   });
-  const { data: disk } = useUsageDisk({ session });
+  const { data: disk } = useUsageDisk({ session, scope: "host" });
 
   const [cpuHistory, setCpuHistory] = useState<UsageHistory[]>([]);
   useEffect(() => {
