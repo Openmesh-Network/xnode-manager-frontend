@@ -24,8 +24,8 @@ import { useRequestPopup } from "../request-popup";
 import { NixEditor } from "@/components/ui/nix-editor";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import {
-  useConfigContainer,
-  useConfigContainerChange,
+  useConfigContainerGet,
+  useConfigContainerSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppEditParams {
@@ -48,7 +48,7 @@ export function AppEdit(params: AppEditParams) {
 
 function AppEditInner({ session, container }: AppEditParams) {
   const setRequestPopup = useRequestPopup();
-  const { mutate: change } = useConfigContainerChange({
+  const { mutate: set } = useConfigContainerSet({
     overrides: {
       onSuccess({ request_id }) {
         setRequestPopup({ request_id });
@@ -56,7 +56,7 @@ function AppEditInner({ session, container }: AppEditParams) {
     },
   });
 
-  const { data: config } = useConfigContainer({
+  const { data: config } = useConfigContainerGet({
     session,
     container,
   });
@@ -116,7 +116,7 @@ function AppEditInner({ session, container }: AppEditParams) {
             <DialogClose asChild>
               <Button
                 onClick={() => {
-                  change({
+                  set({
                     session,
                     path: { container },
                     data: {

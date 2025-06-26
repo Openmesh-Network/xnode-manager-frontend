@@ -14,7 +14,7 @@ import {
 import { Trash2 } from "lucide-react";
 import { useRequestPopup } from "../request-popup";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
-import { useConfigContainerDelete } from "@openmesh-network/xnode-manager-sdk-react";
+import { useConfigContainerRemove } from "@openmesh-network/xnode-manager-sdk-react";
 
 export interface AppDeleteParams {
   session?: xnode.utils.Session;
@@ -38,7 +38,7 @@ export function AppDelete(params: AppDeleteParams) {
 
 function AppDeleteInner({ session, container }: AppDeleteParams) {
   const setRequestPopup = useRequestPopup();
-  const { mutate: delete_ } = useConfigContainerDelete({
+  const { mutate: remove } = useConfigContainerRemove({
     overrides: {
       onSuccess({ request_id }) {
         setRequestPopup({ request_id });
@@ -61,7 +61,7 @@ function AppDeleteInner({ session, container }: AppDeleteParams) {
             <Button
               variant="destructive"
               onClick={() => {
-                delete_({
+                remove({
                   session,
                   path: { container },
                 });

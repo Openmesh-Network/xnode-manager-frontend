@@ -15,8 +15,8 @@ import { useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import {
-  useConfigContainer,
-  useConfigContainerChange,
+  useConfigContainerGet,
+  useConfigContainerSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { NixLock, Updatable } from "../common/update";
 
@@ -40,7 +40,7 @@ export function AppUpdate(params: AppUpdateParams) {
 
 function AppUpdateInner({ session, container }: AppUpdateParams) {
   const setRequestPopup = useRequestPopup();
-  const { mutate: change } = useConfigContainerChange({
+  const { mutate: set } = useConfigContainerSet({
     overrides: {
       onSuccess({ request_id }) {
         setRequestPopup({ request_id });
@@ -48,7 +48,7 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
     },
   });
 
-  const { data: config } = useConfigContainer({
+  const { data: config } = useConfigContainerGet({
     session,
     container,
   });
@@ -121,7 +121,7 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
-                change({
+                set({
                   session,
                   path: { container },
                   data: {
