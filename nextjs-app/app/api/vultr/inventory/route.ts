@@ -107,7 +107,7 @@ export async function GET(_: NextRequest) {
             };
       return {
         type: product.source === "plans" ? "VPS" : "Bare Metal",
-        available: 1_000_000_000, // Unavailable machines have no locations
+        available: 1_000, // Unavailable machines have no locations
         cpu: cpu,
         id: id,
         location: location
