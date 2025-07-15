@@ -19,7 +19,7 @@
             hostname = ./xnode-config/hostname;
           };
         }
-        # inputs.near-app.nixosModules.default
+        # inputs.my-app.nixosModules.default
         (
           { pkgs, ... }@args:
           {
