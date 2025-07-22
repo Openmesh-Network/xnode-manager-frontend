@@ -23,6 +23,7 @@
           {
             # START USER CONFIG
             services.discourse.hostname = "discourse.openmesh.network";
+            # services.discourse.admin.skipCreate = true;
             services.discourse.admin.email = "xnode@openmesh.network";
             services.discourse.admin.username = "xnode";
             services.discourse.admin.fullName = "Openmesh Xnode";
@@ -36,6 +37,7 @@
 
             services.discourse.enable = true;
             services.discourse.database.ignorePostgresqlVersion = true;
+            systemd.targets.discourse-postgresql.upholds = [ "discourse-postgresql.service" ];
 
             security.acme.acceptTerms = true;
             security.acme.defaults.email = "xnode@self.signed";
