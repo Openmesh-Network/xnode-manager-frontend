@@ -19,6 +19,7 @@ import {
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getBaseUrl } from "@/lib/xnode";
+import { SubdomainClaimer } from "./subdomain-claimer";
 
 export function XnodeDetailed() {
   const searchParams = useSearchParams();
@@ -86,6 +87,7 @@ export function XnodeDetailed() {
   return (
     <RequestPopupProvider session={session}>
       <div className="flex flex-col gap-5">
+        <SubdomainClaimer session={session} xnode={xnode} />
         <Section title={`Monitor Xnode ${xnode?.secure ?? xnode?.insecure}`}>
           <div className="grid grid-cols-3 gap-2 max-lg:grid-cols-2 max-md:grid-cols-1">
             {cpuHistory.length > 0 && (
