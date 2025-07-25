@@ -37,6 +37,14 @@ export function SubdomainClaimer({
     queryKey: ["subdomainAvailable", subdomain],
     enabled: !!subdomain,
     queryFn: async () => {
+      if (
+        !new RegExp(/^[A-Za-z0-9](?:[A-Za-z0-9\-]{0,61}[A-Za-z0-9])?$/).test(
+          subdomain
+        )
+      ) {
+        return false;
+      }
+
       return axios
         .get(`https://claim.dns.openmesh.network/${subdomain}/available`)
         .then((res) => res.data as boolean);
