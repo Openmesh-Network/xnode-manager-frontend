@@ -737,9 +737,7 @@ function OSExposeInner({ session }: OSExposeParams) {
                         exposeConfig
                       );
                     } else {
-                      const close = newUserConfig.lastIndexOf("}");
-                      newUserConfig =
-                        newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
+                      newUserConfig = newUserConfig + `\n${exposeConfig}`;
                     }
                   });
                   exposed.forEach((expose) => {
@@ -767,9 +765,7 @@ function OSExposeInner({ session }: OSExposeParams) {
                         exposeConfig
                       );
                     } else {
-                      const close = newUserConfig.lastIndexOf("}");
-                      newUserConfig =
-                        newUserConfig.slice(0, close) + `${exposeConfig}\n}`;
+                      newUserConfig = newUserConfig + `\n${exposeConfig}`;
                     }
                   });
                   authenticated.forEach((authenticate) => {
