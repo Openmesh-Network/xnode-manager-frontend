@@ -15,7 +15,10 @@ import { useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { useOsGet, useOsSet } from "@openmesh-network/xnode-manager-sdk-react";
-import { NixLock, Updatable } from "../common/update";
+import { FileUpdatable, NixLock, NixUpdatable } from "../common/update";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import { useKeepUserConfig } from "@/hooks/useUserConfig";
 
 export interface OSUpdateParams {
   session?: xnode.utils.Session;
@@ -71,6 +74,20 @@ function OSUpdateInner({ session }: OSUpdateParams) {
     ); // Only return inputs that can be updated (not following other inputs)
   }, [lock]);
 
+  const [updateConfig, setUpdateConfig] = useState<boolean>(false);
+  const url =
+    "https://raw.githubusercontent.com/Openmesh-Network/xnode-manager/main/os/flake.nix";
+  const { data: updatedConfig } = useQuery({
+    queryKey: [url],
+    queryFn: async () => {
+      return await axios.get(url).then((res) => res.data as string);
+    },
+  });
+  const latestConfig = useKeepUserConfig({
+    config: config?.flake,
+    updatedConfig,
+  });
+
   return (
     <>
       <DialogHeader>
@@ -80,10 +97,18 @@ function OSUpdateInner({ session }: OSUpdateParams) {
         </DialogDescription>
       </DialogHeader>
       <div className="flex flex-col gap-2">
-        {session &&
-          lock &&
+        {config && (
+          <FileUpdatable
+            session={session}
+            current={config.flake}
+            latest={latestConfig}
+            selected={updateConfig}
+            setSelected={(s) => setUpdateConfig(s)}
+          />
+        )}
+        {lock &&
           inputs.map((i) => (
-            <Updatable
+            <NixUpdatable
               key={i}
               session={session}
               lock={lock}
@@ -101,14 +126,20 @@ function OSUpdateInner({ session }: OSUpdateParams) {
       </div>
       <DialogFooter>
         <Button
-          onClick={() => setUpdateInputs([])}
-          disabled={updateInputs.length === 0}
+          onClick={() => {
+            setUpdateInputs([]);
+            setUpdateConfig(false);
+          }}
+          disabled={updateInputs.length === 0 && !updateConfig}
         >
           Clear Selection
         </Button>
         <Button
-          onClick={() => setUpdateInputs(inputs)}
-          disabled={inputs.length === updateInputs.length}
+          onClick={() => {
+            setUpdateInputs(inputs);
+            setUpdateConfig(true);
+          }}
+          disabled={inputs.length === updateInputs.length && updateConfig}
         >
           Select All
         </Button>
@@ -116,10 +147,21 @@ function OSUpdateInner({ session }: OSUpdateParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
+                let flake: string | null;
+                if (updateConfig) {
+                  if (latestConfig !== undefined) {
+                    flake = latestConfig;
+                  } else {
+                    return;
+                  }
+                } else {
+                  flake = null;
+                }
+
                 set({
                   session,
                   data: {
-                    flake: null,
+                    flake,
                     xnode_owner: null,
                     domain: null,
                     acme_email: null,
@@ -128,7 +170,7 @@ function OSUpdateInner({ session }: OSUpdateParams) {
                   },
                 });
               }}
-              disabled={updateInputs.length === 0}
+              disabled={updateInputs.length === 0 && !updateConfig}
             >
               Update
             </Button>

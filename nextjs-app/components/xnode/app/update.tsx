@@ -18,7 +18,11 @@ import {
   useConfigContainerGet,
   useConfigContainerSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
-import { NixLock, Updatable } from "../common/update";
+import { FileUpdatable, NixLock, NixUpdatable } from "../common/update";
+import { useQuery } from "@tanstack/react-query";
+import axios from "axios";
+import appstore from "@/public/appstore.json";
+import { useKeepUserConfig } from "@/hooks/useUserConfig";
 
 export interface AppUpdateParams {
   session?: xnode.utils.Session;
@@ -76,6 +80,16 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
     ); // Only return inputs that can be updated (not following other inputs)
   }, [lock]);
 
+  const [updateConfig, setUpdateConfig] = useState<boolean>(false);
+  const updatedConfig = useMemo(
+    () => appstore.find((app) => app.name === container)?.flake,
+    [appstore, container]
+  );
+  const latestConfig = useKeepUserConfig({
+    config: config?.flake,
+    updatedConfig,
+  });
+
   return (
     <>
       <DialogHeader>
@@ -85,10 +99,18 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
         </DialogDescription>
       </DialogHeader>
       <div className="flex flex-col gap-2">
-        {session &&
-          lock &&
+        {config && (
+          <FileUpdatable
+            session={session}
+            current={config.flake}
+            latest={latestConfig}
+            selected={updateConfig}
+            setSelected={(s) => setUpdateConfig(s)}
+          />
+        )}
+        {lock &&
           inputs.map((i) => (
-            <Updatable
+            <NixUpdatable
               key={i}
               session={session}
               lock={lock}
@@ -106,14 +128,20 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
       </div>
       <DialogFooter>
         <Button
-          onClick={() => setUpdateInputs([])}
-          disabled={updateInputs.length === 0}
+          onClick={() => {
+            setUpdateInputs([]);
+            setUpdateConfig(false);
+          }}
+          disabled={updateInputs.length === 0 && !updateConfig}
         >
           Clear Selection
         </Button>
         <Button
-          onClick={() => setUpdateInputs(inputs)}
-          disabled={inputs.length === updateInputs.length}
+          onClick={() => {
+            setUpdateInputs(inputs);
+            setUpdateConfig(true);
+          }}
+          disabled={inputs.length === updateInputs.length && updateConfig}
         >
           Select All
         </Button>
@@ -121,19 +149,29 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
           <DialogClose asChild>
             <Button
               onClick={() => {
+                let flake: string;
+                if (updateConfig) {
+                  if (latestConfig !== undefined) {
+                    flake = latestConfig;
+                  } else {
+                    return;
+                  }
+                } else {
+                  flake = config.flake;
+                }
                 set({
                   session,
                   path: { container },
                   data: {
                     settings: {
-                      flake: config.flake,
+                      flake,
                       network: config.network,
                     },
                     update_inputs: updateInputs,
                   },
                 });
               }}
-              disabled={updateInputs.length === 0}
+              disabled={updateInputs.length === 0 && !updateConfig}
             >
               Update
             </Button>

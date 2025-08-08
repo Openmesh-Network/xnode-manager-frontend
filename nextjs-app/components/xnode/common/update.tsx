@@ -2,6 +2,7 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { useUserConfig } from "@/hooks/useUserConfig";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { useInfoFlake } from "@openmesh-network/xnode-manager-sdk-react";
 import { CheckCircle, Hourglass, TriangleAlert } from "lucide-react";
@@ -31,7 +32,7 @@ export interface NixLock {
   version: number;
 }
 
-export function Updatable({
+export function NixUpdatable({
   session,
   lock,
   input,
@@ -114,6 +115,57 @@ export function Updatable({
               : "unknown"}
           </span>
         )}
+      </div>
+    </div>
+  );
+}
+
+export function FileUpdatable({
+  current,
+  latest,
+  selected,
+  setSelected,
+}: {
+  session?: xnode.utils.Session;
+  current?: string;
+  latest?: string;
+  selected: boolean;
+  setSelected: (selected: boolean) => void;
+}) {
+  const updatable = useMemo(() => {
+    if (current === undefined || latest === undefined) {
+      return undefined;
+    }
+
+    return current !== latest;
+  }, [current, latest]);
+
+  return (
+    <div className="items-top flex space-x-2">
+      <Checkbox
+        id="update-config"
+        checked={selected}
+        onCheckedChange={(c) => {
+          if (c !== "indeterminate") {
+            setSelected(c);
+          }
+        }}
+        disabled={updatable === false}
+      />
+      <div className="grid gap-1.5 leading-none">
+        <Label
+          htmlFor="update-config"
+          className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex gap-2"
+        >
+          <span>Update Config</span>
+          {updatable === undefined ? (
+            <Hourglass className="size-4" />
+          ) : updatable ? (
+            <TriangleAlert className="size-4 text-red-600" />
+          ) : (
+            <CheckCircle className="size-4 text-green-600" />
+          )}
+        </Label>
       </div>
     </div>
   );
