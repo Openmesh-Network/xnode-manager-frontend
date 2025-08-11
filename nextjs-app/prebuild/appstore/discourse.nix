@@ -45,6 +45,7 @@
               args.lib.mkForce ''echo "selfsigned only"'';
 
             services.postfix.enable = true;
+            services.postfix.settings.main.inet_protocols = "ipv4";
 
             networking.firewall.allowedTCPPorts = [ 443 ];
           }
