@@ -37,7 +37,6 @@
 
             services.discourse.enable = true;
             services.discourse.database.ignorePostgresqlVersion = true;
-            systemd.targets.discourse-postgresql.upholds = [ "discourse-postgresql.service" ];
 
             security.acme.acceptTerms = true;
             security.acme.defaults.email = "xnode@self.signed";
