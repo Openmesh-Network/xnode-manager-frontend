@@ -32,7 +32,7 @@
             );
 
             services.discourse.mail.notificationEmailAddress = "discourse@openmesh.network";
-            services.postfix.relayHost = "smtp-relay.gmail.com"; # https://support.google.com/a/answer/2956491?hl=en (with IP address authentication)
+            services.postfix.settings.main.relayhost = [ "[smtp-relay.gmail.com]:587" ]; # https://support.google.com/a/answer/2956491?hl=en (with IP address authentication)
             # END USER CONFIG
 
             services.discourse.enable = true;
@@ -45,7 +45,6 @@
               args.lib.mkForce ''echo "selfsigned only"'';
 
             services.postfix.enable = true;
-            services.postfix.relayPort = 587;
 
             networking.firewall.allowedTCPPorts = [ 443 ];
           }
