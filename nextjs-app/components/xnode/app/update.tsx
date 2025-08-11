@@ -19,8 +19,6 @@ import {
   useConfigContainerSet,
 } from "@openmesh-network/xnode-manager-sdk-react";
 import { FileUpdatable, NixLock, NixUpdatable } from "../common/update";
-import { useQuery } from "@tanstack/react-query";
-import axios from "axios";
 import appstore from "@/public/appstore.json";
 import { useKeepUserConfig } from "@/hooks/useUserConfig";
 
@@ -150,12 +148,8 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
             <Button
               onClick={() => {
                 let flake: string;
-                if (updateConfig) {
-                  if (latestConfig !== undefined) {
-                    flake = latestConfig;
-                  } else {
-                    return;
-                  }
+                if (updateConfig && latestConfig !== undefined) {
+                  flake = latestConfig;
                 } else {
                   flake = config.flake;
                 }
