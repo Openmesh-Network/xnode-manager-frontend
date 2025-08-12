@@ -24,7 +24,7 @@ async function handler(req: Request) {
     }
   );
 
-  return new Response(await res.body.bytes(), {
+  return new Response(new Uint8Array(await res.body.bytes()), {
     headers: new Headers(
       Object.entries(res.headers).map(([key, value]) => [key, `${value}`])
     ),

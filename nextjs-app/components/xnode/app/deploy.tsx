@@ -119,6 +119,7 @@ function AppDeployInner({ session, template }: AppDeployParams) {
                     settings: {
                       flake: flakeEdit,
                       network: networkEdit === "host" ? null : networkEdit,
+                      nvidia_gpus: null,
                     },
                     update_inputs: null,
                   },
