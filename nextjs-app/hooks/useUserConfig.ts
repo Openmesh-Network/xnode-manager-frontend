@@ -18,6 +18,26 @@ export function useUserConfig({ config }: { config?: string }) {
   );
 }
 
+export function replaceUserConfig({
+  userConfig,
+  config,
+}: {
+  userConfig?: string;
+  config?: string;
+}) {
+  if (!config) {
+    return undefined;
+  }
+
+  const startSplit = config.split("# START USER CONFIG");
+  const endSplit = startSplit.at(1)?.split("# END USER CONFIG");
+  const beforeUserConfig = startSplit[0];
+  const afterUserConfig = endSplit?.at(1);
+  return !afterUserConfig || !userConfig
+    ? undefined
+    : `${beforeUserConfig}# START USER CONFIG${userConfig}# END USER CONFIG${afterUserConfig}`;
+}
+
 export function useKeepUserConfig({
   config,
   updatedConfig,
@@ -36,20 +56,6 @@ export function useKeepUserConfig({
       ?.split("# END USER CONFIG")
       .at(0);
   }, [config]);
-  const updatedWithoutUserConfig = useMemo(() => {
-    if (!updatedConfig) {
-      return undefined;
-    }
 
-    const startSplit = updatedConfig.split("# START USER CONFIG");
-    const endSplit = startSplit.at(1)?.split("# END USER CONFIG");
-    return {
-      beforeUserConfig: startSplit[0],
-      afterUserConfig: endSplit?.at(1),
-    };
-  }, [updatedConfig]);
-
-  return updatedWithoutUserConfig === undefined || userConfig === undefined
-    ? undefined
-    : `${updatedWithoutUserConfig.beforeUserConfig}# START USER CONFIG${userConfig}# END USER CONFIG${updatedWithoutUserConfig.afterUserConfig}`;
+  return replaceUserConfig({ config: updatedConfig, userConfig });
 }

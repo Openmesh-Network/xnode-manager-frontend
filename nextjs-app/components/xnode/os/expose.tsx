@@ -14,7 +14,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 import { useRequestPopup } from "../request-popup";
 import { Input } from "@/components/ui/input";
-import { useUserConfig } from "@/hooks/useUserConfig";
+import { replaceUserConfig, useUserConfig } from "@/hooks/useUserConfig";
 import { Plus, Trash2 } from "lucide-react";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
@@ -785,10 +785,20 @@ function OSExposeInner({ session }: OSExposeParams) {
                     }
                   });
 
+                  const flake = replaceUserConfig({
+                    userConfig: newUserConfig,
+                    config: config.flake,
+                  });
+
+                  if (!flake) {
+                    console.error("Could not generate new user config");
+                    return;
+                  }
+
                   set({
                     session,
                     data: {
-                      flake: config.flake.replace(userConfig, newUserConfig),
+                      flake,
                       xnode_owner: null,
                       domain: null,
                       acme_email: null,

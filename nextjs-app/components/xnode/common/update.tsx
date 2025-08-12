@@ -2,7 +2,6 @@
 
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { useUserConfig } from "@/hooks/useUserConfig";
 import { xnode } from "@openmesh-network/xnode-manager-sdk";
 import { useInfoFlake } from "@openmesh-network/xnode-manager-sdk-react";
 import { CheckCircle, Hourglass, TriangleAlert } from "lucide-react";
