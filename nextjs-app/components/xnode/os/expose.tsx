@@ -71,7 +71,7 @@ function OSExposeInner({ session }: OSExposeParams) {
   });
   const userConfig = useUserConfig({ config: config?.flake });
   const exposed = useMemo(() => {
-    if (!userConfig) {
+    if (userConfig === undefined) {
       return undefined;
     }
 
@@ -200,7 +200,7 @@ function OSExposeInner({ session }: OSExposeParams) {
   };
 
   const authenticated = useMemo(() => {
-    if (!userConfig) {
+    if (userConfig === undefined) {
       return undefined;
     }
 
@@ -784,6 +784,13 @@ function OSExposeInner({ session }: OSExposeParams) {
                       );
                     }
                   });
+
+                  if (!newUserConfig.startsWith("\n")) {
+                    newUserConfig = "\n" + newUserConfig;
+                  }
+                  if (!newUserConfig.endsWith("\n")) {
+                    newUserConfig = newUserConfig + "\n";
+                  }
 
                   const flake = replaceUserConfig({
                     userConfig: newUserConfig,

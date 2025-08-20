@@ -27,7 +27,7 @@ export function NixEditor({
   const [modeOverride, setModeOverride] = useState<Modes>(Modes.Auto);
   const userConfig = useUserConfig({ config: value });
 
-  const auto = userConfig ? Modes.User : Modes.Full;
+  const auto = userConfig !== undefined ? Modes.User : Modes.Full;
   const mode = modeOverride === Modes.Auto ? auto : modeOverride;
 
   return (
@@ -45,7 +45,7 @@ export function NixEditor({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value={Modes.Auto}>Auto ({auto})</SelectItem>
-            {userConfig && (
+            {userConfig !== undefined && (
               <SelectItem value={Modes.User}>User Config</SelectItem>
             )}
             <SelectItem value={Modes.Full}>Full Flake</SelectItem>
