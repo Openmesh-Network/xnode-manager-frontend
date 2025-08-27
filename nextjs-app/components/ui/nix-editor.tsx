@@ -1,4 +1,4 @@
-import { useUserConfig } from "@/hooks/useUserConfig";
+import { replaceUserConfig, useUserConfig } from "@/hooks/useUserConfig";
 import { Editor } from "@monaco-editor/react";
 import { useState } from "react";
 import {
@@ -60,7 +60,8 @@ export function NixEditor({
         onChange={(v) =>
           onChange(
             mode === Modes.User
-              ? value.replace(userConfig ?? "", v ?? "")
+              ? replaceUserConfig({ config: value, userConfig: `\n${v}\n` }) ??
+                  ""
               : v ?? ""
           )
         }
