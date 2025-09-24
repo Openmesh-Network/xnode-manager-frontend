@@ -69,9 +69,14 @@ function OSUpdateInner({ session }: OSUpdateParams) {
       return [];
     }
 
-    return Object.keys(allInputs).filter(
-      (i) => typeof allInputs[i] === "string"
-    ); // Only return inputs that can be updated (not following other inputs)
+    return Object.keys(allInputs)
+      .map((input) => {
+        return { name: input, value: allInputs[input] };
+      })
+      .filter((input) => typeof input.value === "string") as {
+      name: string;
+      value: string;
+    }[]; // Only return inputs that can be updated (not following other inputs)
   }, [lock]);
 
   const [updateConfig, setUpdateConfig] = useState<boolean>(false);
@@ -109,16 +114,18 @@ function OSUpdateInner({ session }: OSUpdateParams) {
         {lock &&
           inputs.map((i) => (
             <NixUpdatable
-              key={i}
+              key={i.name}
               session={session}
               lock={lock}
               input={i}
-              selected={updateInputs.includes(i)}
+              selected={updateInputs.includes(i.name)}
               setSelected={(s) => {
                 if (s) {
-                  setUpdateInputs((inputs) => inputs.concat([i]));
+                  setUpdateInputs((inputs) => inputs.concat([i.name]));
                 } else {
-                  setUpdateInputs((inputs) => inputs.filter((i2) => i2 !== i));
+                  setUpdateInputs((inputs) =>
+                    inputs.filter((inputName) => inputName !== i.name)
+                  );
                 }
               }}
             />
@@ -136,7 +143,7 @@ function OSUpdateInner({ session }: OSUpdateParams) {
         </Button>
         <Button
           onClick={() => {
-            setUpdateInputs(inputs);
+            setUpdateInputs(inputs.map((input) => input.name));
             setUpdateConfig(true);
           }}
           disabled={inputs.length === updateInputs.length && updateConfig}

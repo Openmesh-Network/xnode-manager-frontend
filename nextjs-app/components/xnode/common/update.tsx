@@ -40,11 +40,11 @@ export function NixUpdatable({
 }: {
   session?: xnode.utils.Session;
   lock: NixLock;
-  input: string;
+  input: { name: string; value: string };
   selected: boolean;
   setSelected: (selected: boolean) => void;
 }) {
-  const current = useMemo(() => lock.nodes[input], [lock.nodes, input]);
+  const current = useMemo(() => lock.nodes[input.value], [lock.nodes, input]);
   const flake = useMemo(
     () =>
       current.original
@@ -84,7 +84,7 @@ export function NixUpdatable({
           htmlFor={`update-${input}`}
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex gap-2"
         >
-          <span>{input}</span>
+          <span>{input.name}</span>
           {updatable === undefined ? (
             <Hourglass className="size-4" />
           ) : updatable ? (
