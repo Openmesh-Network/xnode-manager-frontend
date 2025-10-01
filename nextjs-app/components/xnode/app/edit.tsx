@@ -123,7 +123,7 @@ function AppEditInner({ session, container }: AppEditParams) {
                       settings: {
                         flake: flakeEdit,
                         network: networkEdit === "host" ? null : networkEdit,
-                        nvidia_gpus: null,
+                        nvidia_gpus: config.nvidia_gpus,
                       },
                       update_inputs: null,
                     },

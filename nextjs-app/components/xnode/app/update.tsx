@@ -167,7 +167,7 @@ function AppUpdateInner({ session, container }: AppUpdateParams) {
                     settings: {
                       flake,
                       network: config.network,
-                      nvidia_gpus: null,
+                      nvidia_gpus: config.nvidia_gpus,
                     },
                     update_inputs: updateInputs,
                   },
