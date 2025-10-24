@@ -41,7 +41,7 @@
             security.acme.acceptTerms = true;
             security.acme.defaults.email = "xnode@self.signed";
             security.acme.defaults.server = "https://localhost:12345";
-            systemd.services."acme-${args.config.services.discourse.hostname}".script =
+            systemd.services."acme-order-renew-${args.config.services.discourse.hostname}".script =
               args.lib.mkForce ''echo "selfsigned only"'';
 
             services.postfix.enable = true;
