@@ -70,7 +70,7 @@ export function NixUpdatable({
   return (
     <div className="items-top flex space-x-2">
       <Checkbox
-        id={`update-${input}`}
+        id={`update-${input.name}`}
         checked={selected}
         onCheckedChange={(c) => {
           if (c !== "indeterminate") {
@@ -81,7 +81,7 @@ export function NixUpdatable({
       />
       <div className="grid gap-1.5 leading-none">
         <Label
-          htmlFor={`update-${input}`}
+          htmlFor={`update-${input.name}`}
           className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 flex gap-2"
         >
           <span>{input.name}</span>
