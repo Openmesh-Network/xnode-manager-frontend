@@ -24,7 +24,7 @@
             # START USER CONFIG
             services.nextcloud.hostName = "nextcloud.openmesh.network";
             services.nextcloud.config.adminpassFile = builtins.toString (
-              args.pkgs.writeText "nextcloud.password" "xnode"
+              pkgs.writeText "nextcloud.password" "xnode"
             );
             # END USER CONFIG
 

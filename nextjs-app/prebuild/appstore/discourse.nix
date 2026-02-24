@@ -28,7 +28,7 @@
             services.discourse.admin.username = "xnode";
             services.discourse.admin.fullName = "Openmesh Xnode";
             services.discourse.admin.passwordFile = builtins.toString (
-              args.pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
+              pkgs.writeText "discourse.password" "discourse-on-xnode" # Minimum length of 10 characters
             );
 
             services.discourse.mail.notificationEmailAddress = "discourse@openmesh.network";
