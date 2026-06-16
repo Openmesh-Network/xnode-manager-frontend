@@ -81,7 +81,7 @@ function OSUpdateInner({ session }: OSUpdateParams) {
 
   const [updateConfig, setUpdateConfig] = useState<boolean>(false);
   const url =
-    "https://raw.githubusercontent.com/Openmesh-Network/xnode-manager/main/os/flake.nix";
+    "https://raw.githubusercontent.com/Openmesh-Network/xnodeos/v1/config/flake.nix";
   const { data: updatedConfig } = useQuery({
     queryKey: [url],
     queryFn: async () => {

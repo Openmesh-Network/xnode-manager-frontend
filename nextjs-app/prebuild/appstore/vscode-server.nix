@@ -1,7 +1,7 @@
 {
   inputs = {
-    xnode-manager.url = "github:Openmesh-Network/xnode-manager";
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
+    xnodeos.url = "github:Openmesh-Network/xnodeos/v1";
+    nixpkgs.follows = "xnodeos/nixpkgs";
   };
 
   outputs = inputs: {
@@ -10,7 +10,7 @@
         inherit inputs;
       };
       modules = [
-        inputs.xnode-manager.nixosModules.container
+        inputs.xnodeos.nixosModules.container
         {
           services.xnode-container.xnode-config = {
             host-platform = ./xnode-config/host-platform;

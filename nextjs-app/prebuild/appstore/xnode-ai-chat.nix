@@ -1,8 +1,8 @@
 {
   inputs = {
-    xnode-manager.url = "github:Openmesh-Network/xnode-manager";
+    xnodeos.url = "github:Openmesh-Network/xnodeos/v1";
+    nixpkgs.follows = "xnodeos/nixpkgs";
     xnode-ai-chat.url = "github:OpenxAI-Network/xnode-ai-chat";
-    nixpkgs.follows = "xnode-ai-chat/nixpkgs";
   };
 
   nixConfig = {
@@ -20,7 +20,7 @@
         inherit inputs;
       };
       modules = [
-        inputs.xnode-manager.nixosModules.container
+        inputs.xnodeos.nixosModules.container
         {
           services.xnode-container.xnode-config = {
             host-platform = ./xnode-config/host-platform;
